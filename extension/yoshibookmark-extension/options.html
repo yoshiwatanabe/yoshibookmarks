@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Yoshi Capture Settings</title>
+    <link rel="stylesheet" href="options.css" />
+  </head>
+  <body>
+    <main class="container">
+      <h1>YoshiBookmark Capture Settings</h1>
+
+      <label for="apiBaseUrlInput">API Base URL</label>
+      <input id="apiBaseUrlInput" type="text" placeholder="http://127.0.0.1:8000" />
+
+      <label for="apiTokenInput">Extension API Token</label>
+      <input id="apiTokenInput" type="password" placeholder="EXTENSION_API_TOKEN" />
+
+      <div class="actions">
+        <button id="saveBtn" type="button">Save Settings</button>
+        <button id="testBtn" type="button">Test Provider Status</button>
+      </div>
+
+      <pre id="statusBox" class="status"></pre>
+
+      <section class="notes">
+        <h2>Setup notes</h2>
+        <p>1) Set <code>EXTENSION_API_TOKEN</code> in YoshiBookmark <code>.env</code>.</p>
+        <p>2) Add this extension origin to <code>extension_allowed_origins</code> in <code>config.yaml</code>.</p>
+        <p>3) Restart YoshiBookmark server after config changes.</p>
+      </section>
+    </main>
+
+    <script src="api-client.js"></script>
+    <script src="options.js"></script>
+  </body>
+</html>

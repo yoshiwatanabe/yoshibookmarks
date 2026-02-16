@@ -1,0 +1,20 @@
+[
+  {
+    "Tool": "az",
+    "Query": "az command to switch subscription",
+    "Command": "az account set --subscription \u0022\u003Csubscription-id-or-name\u003E\u0022",
+    "Timestamp": "2026-02-15T21:24:33.9576899Z",
+    "WasAccepted": false,
+    "WasSuccessful": false,
+    "ConfidenceScore": 0.3
+  },
+  {
+    "Tool": "az",
+    "Query": "az command to show azure keyvaults",
+    "Command": "az keyvault list --output table",
+    "Timestamp": "2026-02-15T21:25:15.7132309Z",
+    "WasAccepted": false,
+    "WasSuccessful": false,
+    "ConfidenceScore": 0.3
+  }
+]

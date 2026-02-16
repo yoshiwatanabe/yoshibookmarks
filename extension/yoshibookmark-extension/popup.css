@@ -1,0 +1,105 @@
+body {
+  margin: 0;
+  font-family: "Segoe UI", Tahoma, sans-serif;
+  background: #f7f8fa;
+  color: #1e1f24;
+}
+
+.container {
+  width: 340px;
+  padding: 12px;
+  box-sizing: border-box;
+}
+
+header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+h1 {
+  margin: 0;
+  font-size: 16px;
+}
+
+h2 {
+  margin: 0 0 8px 0;
+  font-size: 14px;
+}
+
+.block {
+  background: #fff;
+  border: 1px solid #e3e5ea;
+  border-radius: 8px;
+  padding: 10px;
+  margin-bottom: 10px;
+}
+
+label {
+  display: block;
+  font-size: 12px;
+  margin-bottom: 4px;
+}
+
+input,
+textarea {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid #c9ced7;
+  border-radius: 6px;
+  padding: 6px 8px;
+  margin-bottom: 8px;
+  font-size: 12px;
+}
+
+.actions {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.checkbox-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 2px;
+  margin-bottom: 0;
+}
+
+.checkbox-row input {
+  width: auto;
+  margin: 0;
+}
+
+button {
+  border: 0;
+  border-radius: 6px;
+  background: #1b6ef3;
+  color: #fff;
+  font-size: 12px;
+  padding: 8px 10px;
+  cursor: pointer;
+}
+
+button:hover {
+  background: #0f58c9;
+}
+
+.link-btn {
+  background: transparent;
+  color: #1b6ef3;
+  padding: 0;
+}
+
+.status {
+  margin: 0;
+  min-height: 28px;
+  white-space: pre-wrap;
+  font-size: 11px;
+  color: #2c3340;
+}
+
+.hidden {
+  display: none;
+}

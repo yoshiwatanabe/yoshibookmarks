@@ -1,0 +1,16 @@
+host: 127.0.0.1
+port: null
+storage_locations:
+- name: default
+  path: C:UserstsuyoReposyoshibookmarktest_config\storage\default
+  is_current: true
+  is_default: true
+  created_at: '2026-02-05T08:17:07.887207Z'
+enable_semantic_search: false
+enable_screenshots: false
+screenshot_timeout: 10
+embedding_model: text-embedding-3-small
+content_analysis_model: gpt-4o-mini
+cache_embeddings: true
+max_cache_size_mb: 100
+log_level: INFO

@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YoshiBookmark</title>
+    <link rel="stylesheet" href="/static/css/styles.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <h1>YoshiBookmark</h1>
+            <p class="subtitle">Your intelligent bookmark manager</p>
+        </header>
+
+        <!-- Toolbar -->
+        <div class="toolbar">
+            <div class="search-bar">
+                <input
+                    type="text"
+                    id="searchInput"
+                    placeholder="Search bookmarks by title, URL, or keywords..."
+                    class="search-input"
+                >
+            </div>
+            <button class="btn btn-primary" id="addBookmarkBtn">
+                + Add Bookmark
+            </button>
+        </div>
+
+        <!-- Filters -->
+        <div class="filters">
+            <button class="filter-btn active" data-filter="all">All</button>
+            <button class="filter-btn" data-filter="recent">Recent</button>
+            <button class="filter-btn" data-filter="deleted">Deleted</button>
+        </div>
+
+        <!-- Stats -->
+        <div class="stats" id="stats">
+            <span>Total: <strong id="totalCount">0</strong></span>
+        </div>
+
+        <!-- Bookmarks Grid -->
+        <div class="bookmarks-grid" id="bookmarksGrid">
+            <!-- Bookmark cards will be inserted here -->
+        </div>
+
+        <!-- Empty State -->
+        <div class="empty-state" id="emptyState" style="display: none;">
+            <h2>No bookmarks yet</h2>
+            <p>Click "Add Bookmark" to create your first bookmark</p>
+        </div>
+
+        <!-- Loading State -->
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p>Loading bookmarks...</p>
+        </div>
+    </div>
+
+    <!-- Add/Edit Modal -->
+    <div class="modal" id="bookmarkModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalTitle">Add Bookmark</h2>
+                <button class="close-btn" id="closeModal">&times;</button>
+            </div>
+            <form id="bookmarkForm">
+                <input type="hidden" id="bookmarkId">
+
+                <div class="form-group">
+                    <label for="url">URL *</label>
+                    <input
+                        type="url"
+                        id="url"
+                        required
+                        placeholder="https://example.com"
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label for="title">Title</label>
+                    <input
+                        type="text"
+                        id="title"
+                        placeholder="Leave empty to auto-generate"
+                    >
+                    <small>Title will be automatically generated from the webpage if left empty</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="description">Description</label>
+                    <textarea
+                        id="description"
+                        rows="3"
+                        placeholder="Optional description"
+                    ></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="keywords">Keywords (comma-separated, max 4)</label>
+                    <input
+                        type="text"
+                        id="keywords"
+                        placeholder="python, web, tutorial"
+                    >
+                    <small>Keywords will be automatically generated if left empty</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="tags">Tags (comma-separated)</label>
+                    <input
+                        type="text"
+                        id="tags"
+                        placeholder="work, reference, tutorial"
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label for="folder">Folder Path</label>
+                    <input
+                        type="text"
+                        id="folder"
+                        placeholder="Work/Projects"
+                    >
+                </div>
+
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" id="cancelBtn">
+                        Cancel
+                    </button>
+                    <button type="submit" class="btn btn-primary" id="saveBtn">
+                        Save
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Notification Toast -->
+    <div class="toast" id="toast">
+        <span id="toastMessage"></span>
+    </div>
+
+    <script src="/static/js/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>YoshiBookmark Capture</title>
+    <link rel="stylesheet" href="popup.css" />
+  </head>
+  <body>
+    <main class="container">
+      <header>
+        <h1>Yoshi Capture</h1>
+        <button id="openOptionsBtn" class="link-btn" type="button">Settings</button>
+      </header>
+
+      <section class="block">
+        <label for="noteInput">Note (optional)</label>
+        <textarea id="noteInput" rows="2" placeholder="Why is this page useful?"></textarea>
+        <label class="checkbox-row">
+          <input id="linksOnlyCheckbox" type="checkbox" />
+          Capture highlighted links only
+        </label>
+      </section>
+
+      <section class="actions">
+        <button id="previewBtn" type="button">Preview</button>
+        <button id="quickSaveBtn" type="button">Quick Save</button>
+      </section>
+
+      <section id="previewSection" class="block hidden">
+        <h2>Preview</h2>
+        <label for="titleInput">Title</label>
+        <input id="titleInput" type="text" />
+
+        <label for="keywordsInput">Keywords (comma-separated, max 4)</label>
+        <input id="keywordsInput" type="text" />
+
+        <label for="tagsInput">Tags (comma-separated)</label>
+        <input id="tagsInput" type="text" />
+
+        <label for="descriptionInput">Description</label>
+        <textarea id="descriptionInput" rows="3"></textarea>
+
+        <button id="commitBtn" type="button">Save Bookmark</button>
+      </section>
+
+      <pre id="statusBox" class="status"></pre>
+    </main>
+
+    <script src="api-client.js"></script>
+    <script src="popup.js"></script>
+  </body>
+</html>
