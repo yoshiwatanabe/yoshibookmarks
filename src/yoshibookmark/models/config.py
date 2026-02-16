@@ -92,6 +92,13 @@ class AppConfig(BaseModel):
         default=100, description="Maximum cache size in MB", ge=10, le=1000
     )
 
+    # Recall settings
+    recall_default_limit: int = Field(default=20, ge=1, le=100)
+    recall_max_limit: int = Field(default=50, ge=1, le=200)
+    recall_semantic_weight: float = Field(default=0.55, ge=0.0, le=1.0)
+    recall_keyword_weight: float = Field(default=0.45, ge=0.0, le=1.0)
+    recall_query_timeout_ms: int = Field(default=1200, ge=100, le=10000)
+
     # Logging
     log_level: str = Field(default="INFO", description="Logging level")
     extension_allowed_origins: List[str] = Field(

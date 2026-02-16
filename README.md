@@ -155,6 +155,8 @@ yoshibookmark serve --port 8080
 yoshibookmark serve --config-dir /path/to/configdir
 ```
 
+Open the web app at `http://127.0.0.1:8000/app` for natural-language recall.
+
 ### Validate Setup
 
 ```bash
@@ -270,6 +272,7 @@ REST API available at `http://localhost:{port}/api/v1`:
 - `POST /ingest/commit` - Commit a preview into bookmark storage
 - `POST /ingest/quick-save` - Save directly from capture context
 - `GET /ingest/providers/status` - Provider chain diagnostics for ingestion
+- `POST /recall/query` - Natural-language recall (hybrid keyword + semantic with fallback)
 - `GET /search?q={query}&type={keyword|semantic}` - Search
 - `GET /views/global` - Global view
 - `GET /views/top-keyword` - Top keyword view
