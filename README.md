@@ -4,14 +4,13 @@ A URL and bookmark management system with intelligent search, semantic discovery
 
 ## Features
 
-- 📚 **Save & Organize**: Quickly save URLs with automatic title and keyword extraction
-- 🔍 **Smart Search**: Keyword search and semantic search using AI
-- 🏷️ **Keywords & Tags**: Automatic keyword extraction from URLs and content
-- 📂 **Multiple Storages**: Organize bookmarks across different locations (Work, Personal, etc.)
-- 📸 **Screenshots**: Capture webpage screenshots for visual reference
-- 🌐 **Web Interface**: Clean, simple browser-based UI
-- 🔌 **API Access**: REST API for IDE/editor integration
-- 💾 **File-Based**: YAML storage for portability and cloud sync
+- 📚 **Save & Organize**: Save URLs with automatic title and keyword extraction
+- 🧩 **Extension Ingestion**: Private browser extension for Preview / Quick Save capture
+- 🧠 **Natural-Language Recall**: Ask in plain language and get ranked bookmark matches
+- 🏷️ **Keywords & Tags**: Automatic keyword extraction plus manual metadata
+- 🌐 **Web UI (`/app`)**: Recall-focused interface with ranked results and snippets
+- 🔌 **API Access**: REST API for extension, IDE/editor, or custom clients
+- 💾 **OneDrive-Friendly Storage**: YAML files and local assets in a sync folder
 - 🗑️ **Safe Deletion**: Soft delete with recovery, hard delete for permanent removal
 
 ## Installation
@@ -155,7 +154,7 @@ yoshibookmark serve --port 8080
 yoshibookmark serve --config-dir /path/to/configdir
 ```
 
-Open the web app at `http://127.0.0.1:8000/app` for natural-language recall.
+Open the web app at `http://127.0.0.1:<port>/app` for natural-language recall.
 
 ### Validate Setup
 
@@ -169,29 +168,31 @@ yoshibookmark doctor --api-url http://127.0.0.1:8000
 
 ### Adding Bookmarks
 
-1. Open the web interface (URL displayed when server starts)
-2. Paste a URL in the "Add Bookmark" box
-3. The system automatically:
-   - Fetches the webpage
-   - Extracts a title
-   - Suggests relevant keywords
-   - Downloads the favicon
-   - Captures a screenshot
-4. Review and edit the suggestions
-5. Click "Save"
+Recommended flow is via the private browser extension:
+
+1. Open any page you want to keep.
+2. Click extension action.
+3. Use:
+   - `Preview` to edit title/keywords/description before saving
+   - `Quick Save` to save immediately
+4. Confirm saved data in `/app` or `GET /api/v1/bookmarks`.
+
+You can also create bookmarks directly via API docs at `http://127.0.0.1:<port>/docs`.
 
 ### Searching Bookmarks
 
-**Keyword Search**: Fast, exact matching
+Use the `/app` search box for natural-language recall.
+
+**Natural-language recall (hybrid)**:
 ```
-Type: python tutorial
-Finds: Bookmarks with "python" or "tutorial" in title, keywords, or description
+Type: the cmdai repo I was working on last week
+Finds: Ranked matches using keyword + semantic scoring (falls back to keyword-only if semantic is unavailable)
 ```
 
-**Semantic Search**: AI-powered, understands meaning
+**Keyword-style recall**:
 ```
-Type: how to write good Python code
-Finds: Bookmarks about Python best practices, style guides, clean code, etc.
+Type: python style guide
+Finds: Exact/partial token matches in title, URL, keywords, tags, and description
 ```
 
 ### Multiple Storage Locations
@@ -263,6 +264,7 @@ storage_location: work
 
 REST API available at `http://localhost:{port}/api/v1`:
 
+- `GET /health` - Service and storage health summary
 - `POST /bookmarks` - Create bookmark
 - `GET /bookmarks` - List bookmarks
 - `GET /bookmarks/{id}` - Get bookmark
@@ -273,11 +275,6 @@ REST API available at `http://localhost:{port}/api/v1`:
 - `POST /ingest/quick-save` - Save directly from capture context
 - `GET /ingest/providers/status` - Provider chain diagnostics for ingestion
 - `POST /recall/query` - Natural-language recall (hybrid keyword + semantic with fallback)
-- `GET /search?q={query}&type={keyword|semantic}` - Search
-- `GET /views/global` - Global view
-- `GET /views/top-keyword` - Top keyword view
-- `GET /views/filtered?query={query}` - Filtered view
-- `GET /views/duplicates` - Duplicate detection
 
 See `docs/API.md` for complete API documentation.
 
@@ -307,14 +304,55 @@ yoshibookmark serve
 
 ## Multi-Machine Setup
 
-YoshiBookmark is designed for portability:
+Use this checklist to share the same bookmark data across machines with OneDrive auto-sync.
 
-1. **Install on each machine**: `pip install yoshibookmark`
-2. **Copy configuration**:
-   - Copy `~/.yoshibookmark/config.yaml`
-   - Copy `~/.yoshibookmark/.env`
-3. **Use cloud-synced storage**: Point storage locations to OneDrive, Dropbox, or other synced folders
-4. **Run**: `yoshibookmark serve`
+### Goal
+
+- **Shared data**: OneDrive folder containing `bookmarks/`, `favicons/`, `screenshots/`
+- **Per-machine runtime**: local `yoshibookmark` process and local extension install
+
+### Machine A (already working)
+
+1. Confirm `config.yaml` points to OneDrive path:
+```yaml
+storage_mode: onedrive_only
+primary_storage_provider: onedrive_local
+primary_storage_path: C:\Users\<you>\OneDrive\Data\yoshibookmark_data
+```
+2. Confirm `yoshibookmark doctor --api-url http://127.0.0.1:8000` reports `0 fail`.
+
+### Machine B (new machine)
+
+1. Install and sign in to OneDrive so the same folder is fully synced locally.
+2. Install YoshiBookmark, then run:
+```powershell
+yoshibookmark init --storage-mode onedrive-only --onedrive-path "C:\Users\<you>\OneDrive\Data\yoshibookmark_data"
+```
+3. Copy (or recreate) `C:\Users\<you>\.yoshibookmark\.env` with:
+   - `OPENAI_API_KEY`
+   - `EXTENSION_API_TOKEN`
+4. Verify `C:\Users\<you>\.yoshibookmark\config.yaml` uses the same OneDrive path.
+5. Start server:
+```powershell
+yoshibookmark serve --port 8000
+```
+6. Run:
+```powershell
+yoshibookmark doctor --api-url http://127.0.0.1:8000
+```
+
+### Extension note for multiple machines/browsers
+
+- Extension ID is generated per browser/profile install and can differ between machines.
+- Add each machine/browser extension origin to that machine's `config.yaml`:
+```yaml
+extension_allowed_origins:
+  - "chrome-extension://<id-machine-a>"
+  - "edge-extension://<id-machine-a>"
+  - "chrome-extension://<id-machine-b>"
+  - "edge-extension://<id-machine-b>"
+```
+- `EXTENSION_API_TOKEN` must match between server `.env` and extension settings on each machine.
 
 The YAML file format is human-readable and git/diff-friendly, making it perfect for version control and synchronization.
 

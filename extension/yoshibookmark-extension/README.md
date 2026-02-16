@@ -106,3 +106,20 @@ extension_allowed_origins:
 
 - This extension is intentionally private and local-use.
 - API keys for model providers remain backend-side only.
+
+## Second Machine Setup (OneDrive Sync)
+
+If you run YoshiBookmark on another machine with the same OneDrive data folder:
+
+1. Install and sync OneDrive first.
+2. Run:
+```powershell
+yoshibookmark init --storage-mode onedrive-only --onedrive-path "C:\Users\<you>\OneDrive\Data\yoshibookmark_data"
+```
+3. Configure that machine's `.env` with `OPENAI_API_KEY` and `EXTENSION_API_TOKEN`.
+4. Install this extension again on that machine/browser and get its new extension ID.
+5. Add that new origin to that machine's `config.yaml` (`extension_allowed_origins`).
+6. Restart server and run:
+```powershell
+yoshibookmark doctor --api-url http://127.0.0.1:8000
+```
