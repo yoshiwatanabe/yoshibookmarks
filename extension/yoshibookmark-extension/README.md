@@ -46,8 +46,15 @@ extension_allowed_origins:
 7. Restart server and configure extension Settings:
    - API Base URL: `http://127.0.0.1:8000`
    - Extension API Token: same as `EXTENSION_API_TOKEN`
+   - Open Settings from:
+     - extension popup -> **Settings**, or
+     - `chrome://extensions` / `edge://extensions` -> YoshiBookmark Capture -> **Extension options**
 
 8. Click **Test Provider Status** in extension Settings.
+9. Open main YoshiBookmark UI at:
+```text
+http://127.0.0.1:8000/app
+```
 
 ## What it does
 

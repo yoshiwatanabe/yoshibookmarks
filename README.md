@@ -81,9 +81,16 @@ extension_allowed_origins:
 7. In extension settings, set:
    - API Base URL: `http://127.0.0.1:8000`
    - Extension API Token: same value as `EXTENSION_API_TOKEN`
+   - Open extension settings from:
+     - extension popup -> **Settings**, or
+     - `chrome://extensions` / `edge://extensions` -> YoshiBookmark Capture -> **Extension options**
 8. Validate setup:
 ```bash
 yoshibookmark doctor --api-url http://127.0.0.1:8000
+```
+9. Open main UI page:
+```text
+http://127.0.0.1:8000/app
 ```
 
 Why ID and token are both required:
@@ -155,6 +162,7 @@ yoshibookmark serve --config-dir /path/to/configdir
 ```
 
 Open the web app at `http://127.0.0.1:<port>/app` for natural-language recall.
+The root URL (`/`) is API metadata; the main UI is `/app`.
 
 ### Validate Setup
 
