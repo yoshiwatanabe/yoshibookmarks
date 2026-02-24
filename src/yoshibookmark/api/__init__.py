@@ -2,8 +2,10 @@
 
 import logging
 from contextlib import asynccontextmanager
+from pathlib import Path
 
 from fastapi import FastAPI
+from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
@@ -12,6 +14,7 @@ from ..core.ai_inference import MultiProviderInferenceService
 from ..core.bookmark_manager import BookmarkManager
 from ..core.content_analyzer import ContentAnalyzer
 from ..core.ingestion_service import IngestionService
+from ..core.recall_service import RecallService
 from ..core.storage_manager import StorageManager
 from ..models.config import AppConfig, EnvSettings
 
@@ -25,13 +28,14 @@ config_manager: ConfigManager = None
 runtime_config: AppConfig = None
 runtime_env_settings: EnvSettings = None
 ingestion_service: IngestionService = None
+recall_service: RecallService = None
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Application lifespan handler."""
     global storage_manager, bookmark_manager, content_analyzer
-    global config_manager, runtime_config, runtime_env_settings, ingestion_service
+    global config_manager, runtime_config, runtime_env_settings, ingestion_service, recall_service
 
     # Startup
     logger.info("Starting YoshiBookmark API...")
@@ -74,6 +78,11 @@ async def lifespan(app: FastAPI):
         content_analyzer=content_analyzer,
         inference_service=inference_service,
     )
+    recall_service = RecallService(
+        config=app_config,
+        storage_manager=storage_manager,
+        env_settings=env_settings,
+    )
 
     logger.info(
         f"Initialized with {len(storage_manager.storage_locations)} storage location(s)"
@@ -111,14 +120,19 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+static_dir = Path(__file__).resolve().parent.parent / "web" / "static"
+app.mount("/static", StaticFiles(directory=static_dir), name="static")
+
 # Import and include routers
 from .bookmarks import router as bookmarks_router
 from .health import router as health_router
 from .ingest import router as ingest_router
+from .recall import router as recall_router
 
 app.include_router(bookmarks_router, prefix="/api/v1", tags=["bookmarks"])
 app.include_router(health_router, prefix="/api/v1", tags=["health"])
 app.include_router(ingest_router, prefix="/api/v1", tags=["ingest"])
+app.include_router(recall_router, prefix="/api/v1", tags=["recall"])
 
 
 @app.get("/")
@@ -129,4 +143,11 @@ async def root():
         "version": "0.1.0",
         "docs": "/docs",
         "health": "/api/v1/health",
+        "app": "/app",
     }
+
+
+@app.get("/app")
+async def web_app():
+    """Serve web application shell."""
+    return FileResponse(static_dir / "index.html")

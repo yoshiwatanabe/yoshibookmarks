@@ -204,7 +204,6 @@ class MultiProviderInferenceService:
                                 {"role": "system", "content": "You output compact JSON only."},
                                 {"role": "user", "content": prompt},
                             ],
-                            "temperature": 0.2,
                         }
                         response = await client.post(endpoint, headers=headers, json=body)
                         self._raise_for_status(provider_id, response)
@@ -300,9 +299,21 @@ class MultiProviderInferenceService:
         try:
             return json.loads(candidate)
         except json.JSONDecodeError:
-            # Best-effort extraction of first JSON object.
-            start = candidate.find("{")
-            end = candidate.rfind("}")
-            if start >= 0 and end > start:
-                return json.loads(candidate[start : end + 1])
+            extracted = self._extract_first_json_object(candidate)
+            if extracted is not None:
+                return extracted
             raise
+
+    def _extract_first_json_object(self, text: str) -> Optional[dict]:
+        """Extract first valid JSON object from mixed model output."""
+        decoder = json.JSONDecoder()
+        for idx, char in enumerate(text):
+            if char not in "{[":
+                continue
+            try:
+                parsed, _ = decoder.raw_decode(text[idx:])
+            except json.JSONDecodeError:
+                continue
+            if isinstance(parsed, dict):
+                return parsed
+        return None
