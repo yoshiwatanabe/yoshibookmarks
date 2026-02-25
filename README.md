@@ -277,14 +277,17 @@ REST API available at `http://localhost:{port}/api/v1`:
 - `GET /bookmarks` - List bookmarks
 - `GET /bookmarks/{id}` - Get bookmark
 - `PUT /bookmarks/{id}` - Update bookmark
-- `DELETE /bookmarks/{id}` - Delete bookmark
+- `DELETE /bookmarks/{id}` - Delete bookmark (soft delete)
+- `POST /bookmarks/{id}/restore` - Restore a soft-deleted bookmark
+- `POST /bookmarks/{id}/access` - Record an access event (updates last_accessed)
 - `POST /ingest/preview` - Generate capture suggestions for browser extension
 - `POST /ingest/commit` - Commit a preview into bookmark storage
 - `POST /ingest/quick-save` - Save directly from capture context
 - `GET /ingest/providers/status` - Provider chain diagnostics for ingestion
+- `GET /ingest/preview/{preview_id}/diagnostics` - Diagnostics for a specific preview
 - `POST /recall/query` - Natural-language recall (hybrid keyword + semantic with fallback)
 
-See `docs/API.md` for complete API documentation.
+Interactive API documentation is available at `http://127.0.0.1:<port>/docs` (Swagger UI) when the server is running.
 
 ## Development
 
@@ -375,7 +378,7 @@ The YAML file format is human-readable and git/diff-friendly, making it perfect 
 
 - [x] Phase 1: Basic bookmark management
 - [x] Phase 2: OpenAI integration for smart features
-- [ ] Phase 3: Semantic search and duplicate detection
+- [x] Phase 3: Semantic search and duplicate detection
 - [ ] Phase 4: Screenshots and visual features
 - [ ] Phase 5: Import/export and graph visualization
 - [ ] Phase 6: Modern React/Vue frontend
