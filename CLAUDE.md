@@ -91,13 +91,13 @@ Since bookmark files may be accessed by multiple clients simultaneously (web UI,
 - Ensure atomic updates where possible
 
 ### Port Configuration
-Web server must automatically select an available port to avoid conflicts. Display the selected port/URL to users on startup.
+Web server defaults to port 8000. Use `--port` to override. Displays the selected port/URL to users on startup.
 
 ## Technical Decisions
 
 Based on spec.md clarifications (Session 2026-02-04):
 - **Storage Format**: YAML (human-readable, diff-friendly)
-- **Web Server Port**: Random available port (configurable)
+- **Web Server Port**: 8000 by default (configurable with `--port`)
 - **Screenshots**: Independent per bookmark entry (not shared across duplicates)
 - **IDE Integration Protocol**: HTTP REST API (returns JSON)
 - **Folder Deletion Behavior**: Move bookmarks to parent/root
