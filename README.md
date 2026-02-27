@@ -278,13 +278,16 @@ REST API available at `http://localhost:{port}/api/v1`:
 - `GET /bookmarks/{id}` - Get bookmark
 - `PUT /bookmarks/{id}` - Update bookmark
 - `DELETE /bookmarks/{id}` - Delete bookmark
+- `POST /bookmarks/{id}/restore` - Restore a soft-deleted bookmark
+- `POST /bookmarks/{id}/access` - Track bookmark access (updates last_accessed timestamp)
 - `POST /ingest/preview` - Generate capture suggestions for browser extension
 - `POST /ingest/commit` - Commit a preview into bookmark storage
 - `POST /ingest/quick-save` - Save directly from capture context
 - `GET /ingest/providers/status` - Provider chain diagnostics for ingestion
+- `GET /ingest/preview/{preview_id}/diagnostics` - Diagnostics for a specific preview
 - `POST /recall/query` - Natural-language recall (hybrid keyword + semantic with fallback)
 
-See `docs/API.md` for complete API documentation.
+See the interactive API docs at `http://127.0.0.1:<port>/docs` for complete API documentation.
 
 ## Development
 
@@ -393,7 +396,7 @@ MIT License - See LICENSE file for details
 ## Support
 
 - **Issues**: https://github.com/yourusername/yoshibookmark/issues
-- **Documentation**: See `docs/` directory
+- **Documentation**: See `DESIGN.md` and interactive API docs at `/docs`
 - **Design**: See `DESIGN.md` for technical details
 
 ## Acknowledgments
