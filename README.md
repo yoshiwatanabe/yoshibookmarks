@@ -284,7 +284,7 @@ REST API available at `http://localhost:{port}/api/v1`:
 - `GET /ingest/providers/status` - Provider chain diagnostics for ingestion
 - `POST /recall/query` - Natural-language recall (hybrid keyword + semantic with fallback)
 
-See `docs/API.md` for complete API documentation.
+See the interactive API docs at `http://127.0.0.1:<port>/docs` for complete API documentation.
 
 ## Development
 

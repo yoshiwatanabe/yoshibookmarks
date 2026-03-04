@@ -19,17 +19,17 @@
           │      FastAPI Application            │
           │  ┌────────────────────────────────┐ │
           │  │      API Routes Layer          │ │
-          │  │  /bookmarks, /search, /views   │ │
+          │  │  /bookmarks, /ingest, /recall  │ │
           │  └────────────┬───────────────────┘ │
           │               │                      │
           │  ┌────────────▼───────────────────┐ │
           │  │    Core Services Layer         │ │
           │  │  ┌──────────────────────────┐  │ │
           │  │  │ BookmarkManager          │  │ │
-          │  │  │ SearchEngine             │  │ │
+          │  │  │ RecallService            │  │ │
+          │  │  │ IngestionService         │  │ │
           │  │  │ StorageManager           │  │ │
           │  │  │ ContentAnalyzer          │  │ │
-          │  │  │ ScreenshotCapture        │  │ │
           │  │  └──────────────────────────┘  │ │
           │  └────────────┬───────────────────┘ │
           └───────────────┼─────────────────────┘
@@ -76,11 +76,18 @@
 - Last accessed timestamp tracking
 - Duplicate detection
 
-**SearchEngine**
-- Keyword/text search
+**RecallService**
+- Natural-language recall with hybrid keyword + semantic scoring
+- Keyword/text search with relevance scoring
 - Semantic search with OpenAI embeddings
 - Embedding cache management
 - Result ranking and filtering
+
+**IngestionService**
+- Browser-extension oriented capture workflow (preview, commit, quick-save)
+- AI-powered metadata suggestion via `MultiProviderInferenceService`
+- Preview record management (expiring records)
+- Provider chain diagnostics
 
 **StorageManager**
 - YAML file I/O operations
@@ -91,16 +98,10 @@
 
 **ContentAnalyzer**
 - Webpage fetching and parsing
-- Title extraction via OpenAI GPT
-- Keyword generation via OpenAI GPT
+- Title extraction via HTML parsing
+- Keyword generation from URL paths and page content
 - Favicon downloading
 - Metadata extraction
-
-**ScreenshotCapture**
-- Playwright browser management
-- Screenshot capture with retries
-- Image optimization and storage
-- Error handling for dynamic pages
 
 ## 2. Technology Stack Details
 
@@ -503,7 +504,76 @@ Response 200:
 }
 ```
 
-#### Search
+#### Recall
+
+**Natural-Language Recall (Hybrid)**
+```http
+POST /api/v1/recall/query
+Content-Type: application/json
+
+{
+  "query": "python style guide I saved last week",
+  "limit": 10,
+  "scope": "all"
+}
+
+Response 200:
+{
+  "query": "python style guide I saved last week",
+  "results": [...],
+  "total": 5
+}
+```
+
+#### Ingestion (Browser Extension)
+
+**Preview** — generate AI-powered metadata suggestions before saving:
+```http
+POST /api/v1/ingest/preview
+Content-Type: application/json
+x-extension-token: <token>
+
+{
+  "url": "https://example.com",
+  "page_title": "Example",
+  "page_excerpt": "...",
+  "selected_text": "..."
+}
+```
+
+**Commit** — save a previously generated preview as a bookmark:
+```http
+POST /api/v1/ingest/commit
+Content-Type: application/json
+x-extension-token: <token>
+
+{
+  "preview_id": "...",
+  "title": "My Title",
+  "keywords": ["kw1", "kw2"]
+}
+```
+
+**Quick Save** — save immediately without preview step:
+```http
+POST /api/v1/ingest/quick-save
+Content-Type: application/json
+x-extension-token: <token>
+
+{
+  "url": "https://example.com",
+  "page_title": "Example"
+}
+```
+
+**Provider Status** — diagnostics for the AI provider chain:
+```http
+GET /api/v1/ingest/providers/status
+```
+
+#### Search and Views (Planned)
+
+> **Note**: The `/api/v1/search` and `/api/v1/views/` endpoints below are planned features not yet implemented. Current search/recall is via `POST /api/v1/recall/query`.
 
 **Keyword Search**
 ```http
@@ -776,6 +846,8 @@ class StorageManager:
 
 ### 6.2 ContentAnalyzer
 
+> **Note**: The current `ContentAnalyzer` implementation (`src/yoshibookmark/core/content_analyzer.py`) is a Phase 1 MVP that uses HTML/BeautifulSoup parsing without OpenAI. It takes a `timeout` parameter (not an `openai_client`). AI-powered analysis is handled by `IngestionService` via `MultiProviderInferenceService`. The design below represents the intended future state.
+
 ```python
 class ContentAnalyzer:
     """Analyzes webpage content using OpenAI."""
@@ -917,7 +989,9 @@ Respond in JSON format:
         return None
 ```
 
-### 6.3 SearchEngine
+### 6.3 RecallService
+
+> **Note**: This was originally designed as `SearchEngine`. The actual implementation is `RecallService` in `src/yoshibookmark/core/recall_service.py`, which provides hybrid keyword + semantic recall via `POST /api/v1/recall/query`.
 
 ```python
 class SearchEngine:
@@ -1061,7 +1135,9 @@ class SearchEngine:
         return dot_product / (magnitude1 * magnitude2)
 ```
 
-### 6.4 ScreenshotCapture
+### 6.4 ScreenshotCapture (Planned)
+
+> **Note**: `ScreenshotCapture` is not yet implemented as a standalone service. Screenshot directory structure is created during `yoshibookmark init`, but automated capture via Playwright is a planned feature.
 
 ```python
 class ScreenshotCapture:
