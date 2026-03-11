@@ -19,7 +19,7 @@
           │      FastAPI Application            │
           │  ┌────────────────────────────────┐ │
           │  │      API Routes Layer          │ │
-          │  │  /bookmarks, /search, /views   │ │
+          │  │  /bookmarks, /ingest, /recall  │ │
           │  └────────────┬───────────────────┘ │
           │               │                      │
           │  ┌────────────▼───────────────────┐ │
@@ -37,9 +37,11 @@
           ┌───────────────▼─────────────────────┐
           │      External Services              │
           │  ┌────────────┐  ┌────────────────┐ │
-          │  │ OpenAI API │  │   Playwright   │ │
-          │  │ (GPT +     │  │   (Headless    │ │
-          │  │ Embeddings)│  │    Browser)    │ │
+          │  │ AI APIs    │  │   Playwright   │ │
+          │  │ (OpenAI,   │  │   (Headless    │ │
+          │  │ Azure,     │  │    Browser)    │ │
+          │  │ Anthropic, │  │                │ │
+          │  │ Gemini)    │  │                │ │
           │  └────────────┘  └────────────────┘ │
           └─────────────────────────────────────┘
                           │
@@ -76,11 +78,11 @@
 - Last accessed timestamp tracking
 - Duplicate detection
 
-**SearchEngine**
+**RecallService**
 - Keyword/text search
-- Semantic search with OpenAI embeddings
+- Semantic search with embeddings
 - Embedding cache management
-- Result ranking and filtering
+- Result ranking and filtering (hybrid keyword + semantic)
 
 **StorageManager**
 - YAML file I/O operations
@@ -96,11 +98,16 @@
 - Favicon downloading
 - Metadata extraction
 
-**ScreenshotCapture**
-- Playwright browser management
-- Screenshot capture with retries
-- Image optimization and storage
-- Error handling for dynamic pages
+**IngestionService**
+- Browser-extension capture workflow (preview + commit)
+- Quick-save endpoint handling
+- Preview session management (TTL-based)
+- Delegates to ContentAnalyzer and BookmarkManager
+
+**MultiProviderInferenceService**
+- AI inference with automatic provider failover
+- Supports OpenAI, Azure OpenAI, Anthropic, and Gemini
+- Provider chain diagnostics
 
 ## 2. Technology Stack Details
 
@@ -116,6 +123,7 @@
 
 ### AI/ML
 - **OpenAI Python SDK**: openai>=1.0.0
+- **Multi-provider failover**: OpenAI, Azure OpenAI, Anthropic, Gemini (configurable `agent_providers` chain)
 - **Models**:
   - Embeddings: `text-embedding-3-small` (fast, cheap, good quality)
   - Content Analysis: `gpt-4o-mini` (fast, cost-effective)
@@ -299,18 +307,18 @@ yoshibookmark/
 │       ├── api/                     # FastAPI routes
 │       │   ├── __init__.py
 │       │   ├── bookmarks.py         # Bookmark CRUD endpoints
-│       │   ├── search.py            # Search endpoints
-│       │   ├── views.py             # View-related endpoints
-│       │   ├── storage.py           # Storage management endpoints
+│       │   ├── ingest.py            # Browser-extension ingestion endpoints
+│       │   ├── recall.py            # Natural-language recall endpoints
 │       │   └── health.py            # Health check endpoints
 │       │
 │       ├── core/                    # Core business logic
 │       │   ├── __init__.py
 │       │   ├── bookmark_manager.py  # Bookmark operations
-│       │   ├── search_engine.py     # Search logic
+│       │   ├── recall_service.py    # Hybrid keyword + semantic recall
+│       │   ├── ingestion_service.py # Browser-extension capture workflow
+│       │   ├── ai_inference.py      # Multi-provider AI inference with failover
 │       │   ├── storage_manager.py   # File I/O and indexing
-│       │   ├── content_analyzer.py  # Web content analysis
-│       │   └── screenshot.py        # Screenshot capture
+│       │   └── content_analyzer.py  # Web content analysis
 │       │
 │       ├── models/                  # Pydantic models
 │       │   ├── __init__.py
