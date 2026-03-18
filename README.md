@@ -119,6 +119,10 @@ OPENAI_API_KEY=your-key
 
 # Extension capture auth (local shared secret, not OAuth; same value used in extension settings)
 EXTENSION_API_TOKEN=your-random-local-token
+
+# Optional: additional provider keys for AI failover chain
+# ANTHROPIC_API_KEY=your-anthropic-key
+# GOOGLE_API_KEY=your-google-gemini-key
 ```
 
 ### 2. `config.yaml` - Application Settings
@@ -277,11 +281,14 @@ REST API available at `http://localhost:{port}/api/v1`:
 - `GET /bookmarks` - List bookmarks
 - `GET /bookmarks/{id}` - Get bookmark
 - `PUT /bookmarks/{id}` - Update bookmark
-- `DELETE /bookmarks/{id}` - Delete bookmark
+- `DELETE /bookmarks/{id}` - Delete bookmark (soft delete by default)
+- `POST /bookmarks/{id}/restore` - Restore a soft-deleted bookmark
+- `POST /bookmarks/{id}/access` - Track bookmark access (updates last accessed timestamp)
 - `POST /ingest/preview` - Generate capture suggestions for browser extension
 - `POST /ingest/commit` - Commit a preview into bookmark storage
 - `POST /ingest/quick-save` - Save directly from capture context
 - `GET /ingest/providers/status` - Provider chain diagnostics for ingestion
+- `GET /ingest/preview/{preview_id}/diagnostics` - Per-preview ingestion diagnostics
 - `POST /recall/query` - Natural-language recall (hybrid keyword + semantic with fallback)
 
 See `docs/API.md` for complete API documentation.
