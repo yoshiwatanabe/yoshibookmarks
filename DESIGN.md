@@ -19,14 +19,14 @@
           │      FastAPI Application            │
           │  ┌────────────────────────────────┐ │
           │  │      API Routes Layer          │ │
-          │  │  /bookmarks, /search, /views   │ │
+          │  │  /bookmarks, /ingest, /recall  │ │
           │  └────────────┬───────────────────┘ │
           │               │                      │
           │  ┌────────────▼───────────────────┐ │
           │  │    Core Services Layer         │ │
           │  │  ┌──────────────────────────┐  │ │
           │  │  │ BookmarkManager          │  │ │
-          │  │  │ SearchEngine             │  │ │
+          │  │  │ RecallService            │  │ │
           │  │  │ StorageManager           │  │ │
           │  │  │ ContentAnalyzer          │  │ │
           │  │  │ ScreenshotCapture        │  │ │
@@ -76,7 +76,7 @@
 - Last accessed timestamp tracking
 - Duplicate detection
 
-**SearchEngine**
+**RecallService**
 - Keyword/text search
 - Semantic search with OpenAI embeddings
 - Embedding cache management
@@ -917,10 +917,10 @@ Respond in JSON format:
         return None
 ```
 
-### 6.3 SearchEngine
+### 6.3 RecallService
 
 ```python
-class SearchEngine:
+class RecallService:
     """Handles keyword and semantic search."""
 
     def __init__(self, openai_client: OpenAI, storage_manager: StorageManager):
