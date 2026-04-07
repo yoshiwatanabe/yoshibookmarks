@@ -41,7 +41,7 @@ yoshibookmark init --storage-mode onedrive-only --onedrive-path "C:\Users\YourNa
 yoshibookmark serve
 ```
 
-The server will automatically select an available port and display the URL.
+The server starts on port 8000 by default. Use `--port` to specify a different port.
 
 ## Configuration
 
@@ -119,6 +119,10 @@ OPENAI_API_KEY=your-key
 
 # Extension capture auth (local shared secret, not OAuth; same value used in extension settings)
 EXTENSION_API_TOKEN=your-random-local-token
+
+# Optional: additional AI provider keys for failover chain
+# ANTHROPIC_API_KEY=your-anthropic-api-key
+# GOOGLE_API_KEY=your-google-api-key
 ```
 
 ### 2. `config.yaml` - Application Settings
@@ -151,7 +155,7 @@ content_analysis_model: gpt-4o-mini
 ### Starting the Server
 
 ```bash
-# Start with auto-selected port
+# Start with default port (8000)
 yoshibookmark serve
 
 # Specify port
@@ -278,10 +282,13 @@ REST API available at `http://localhost:{port}/api/v1`:
 - `GET /bookmarks/{id}` - Get bookmark
 - `PUT /bookmarks/{id}` - Update bookmark
 - `DELETE /bookmarks/{id}` - Delete bookmark
+- `POST /bookmarks/{id}/restore` - Restore a soft-deleted bookmark
+- `POST /bookmarks/{id}/access` - Track bookmark access (updates last_accessed timestamp)
 - `POST /ingest/preview` - Generate capture suggestions for browser extension
 - `POST /ingest/commit` - Commit a preview into bookmark storage
 - `POST /ingest/quick-save` - Save directly from capture context
 - `GET /ingest/providers/status` - Provider chain diagnostics for ingestion
+- `GET /ingest/preview/{preview_id}/diagnostics` - Get provider trace for a preview
 - `POST /recall/query` - Natural-language recall (hybrid keyword + semantic with fallback)
 
 See `docs/API.md` for complete API documentation.
