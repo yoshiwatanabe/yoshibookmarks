@@ -292,25 +292,24 @@ yoshibookmark/
 ├── src/
 │   └── yoshibookmark/
 │       ├── __init__.py
-│       ├── __main__.py              # Entry point: python -m yoshibookmark
 │       ├── cli.py                   # CLI commands
 │       ├── config.py                # Configuration management
 │       │
 │       ├── api/                     # FastAPI routes
 │       │   ├── __init__.py
 │       │   ├── bookmarks.py         # Bookmark CRUD endpoints
-│       │   ├── search.py            # Search endpoints
-│       │   ├── views.py             # View-related endpoints
-│       │   ├── storage.py           # Storage management endpoints
+│       │   ├── ingest.py            # Browser-extension ingestion endpoints
+│       │   ├── recall.py            # Natural-language recall endpoints
 │       │   └── health.py            # Health check endpoints
 │       │
 │       ├── core/                    # Core business logic
 │       │   ├── __init__.py
 │       │   ├── bookmark_manager.py  # Bookmark operations
-│       │   ├── search_engine.py     # Search logic
+│       │   ├── ai_inference.py      # AI/embedding inference helpers
+│       │   ├── ingestion_service.py # Browser-extension capture workflows
+│       │   ├── recall_service.py    # Natural-language recall (hybrid search)
 │       │   ├── storage_manager.py   # File I/O and indexing
-│       │   ├── content_analyzer.py  # Web content analysis
-│       │   └── screenshot.py        # Screenshot capture
+│       │   └── content_analyzer.py  # Web content analysis
 │       │
 │       ├── models/                  # Pydantic models
 │       │   ├── __init__.py
@@ -325,23 +324,25 @@ yoshibookmark/
 │       │   └── url_utils.py         # URL validation/parsing
 │       │
 │       └── web/                     # Frontend assets
-│           ├── static/
-│           │   ├── css/
-│           │   │   └── style.css
-│           │   ├── js/
-│           │   │   ├── app.js
-│           │   │   ├── search.js
-│           │   │   └── views.js
-│           │   └── icons/
-│           └── templates/
+│           └── static/
+│               ├── css/
+│               │   └── styles.css
+│               ├── js/
+│               │   └── app.js
 │               └── index.html
 │
 ├── tests/
 │   ├── __init__.py
+│   ├── test_ai_inference.py
+│   ├── test_api_bookmarks.py
+│   ├── test_api_ingest.py
+│   ├── test_api_recall.py
 │   ├── test_bookmark_manager.py
-│   ├── test_search_engine.py
-│   ├── test_storage_manager.py
-│   └── fixtures/
+│   ├── test_bookmark_model.py
+│   ├── test_cli.py
+│   ├── test_config.py
+│   ├── test_content_analyzer.py
+│   └── test_storage_manager.py
 │
 ├── docs/
 │   ├── API.md
@@ -1675,10 +1676,10 @@ yoshibookmark serve
 
 ### Unit Tests
 - `test_bookmark_manager.py`: CRUD operations, validation
-- `test_search_engine.py`: Keyword and semantic search
+- `test_ai_inference.py`: AI/embedding inference helpers
+- `test_api_recall.py`: Keyword and semantic recall
 - `test_storage_manager.py`: File I/O, locking, indexing
 - `test_content_analyzer.py`: URL fetching, GPT analysis
-- `test_screenshot.py`: Screenshot capture
 
 ### Integration Tests
 - API endpoint tests
