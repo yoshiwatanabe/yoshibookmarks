@@ -299,18 +299,18 @@ yoshibookmark/
 │       ├── api/                     # FastAPI routes
 │       │   ├── __init__.py
 │       │   ├── bookmarks.py         # Bookmark CRUD endpoints
-│       │   ├── search.py            # Search endpoints
-│       │   ├── views.py             # View-related endpoints
-│       │   ├── storage.py           # Storage management endpoints
+│       │   ├── ingest.py            # Ingestion endpoints (browser extension capture)
+│       │   ├── recall.py            # Natural-language recall endpoints
 │       │   └── health.py            # Health check endpoints
 │       │
 │       ├── core/                    # Core business logic
 │       │   ├── __init__.py
 │       │   ├── bookmark_manager.py  # Bookmark operations
-│       │   ├── search_engine.py     # Search logic
+│       │   ├── recall_service.py    # Keyword + semantic recall logic
+│       │   ├── ingestion_service.py # Ingestion pipeline (preview/commit/quick-save)
+│       │   ├── ai_inference.py      # Multi-provider AI inference service
 │       │   ├── storage_manager.py   # File I/O and indexing
-│       │   ├── content_analyzer.py  # Web content analysis
-│       │   └── screenshot.py        # Screenshot capture
+│       │   └── content_analyzer.py  # Web content analysis and screenshot capture
 │       │
 │       ├── models/                  # Pydantic models
 │       │   ├── __init__.py
@@ -325,27 +325,25 @@ yoshibookmark/
 │       │   └── url_utils.py         # URL validation/parsing
 │       │
 │       └── web/                     # Frontend assets
-│           ├── static/
-│           │   ├── css/
-│           │   │   └── style.css
-│           │   ├── js/
-│           │   │   ├── app.js
-│           │   │   ├── search.js
-│           │   │   └── views.js
-│           │   └── icons/
-│           └── templates/
+│           └── static/
+│               ├── css/
+│               │   └── styles.css
+│               ├── js/
+│               │   └── app.js
 │               └── index.html
 │
 ├── tests/
 │   ├── __init__.py
 │   ├── test_bookmark_manager.py
-│   ├── test_search_engine.py
+│   ├── test_bookmark_model.py
 │   ├── test_storage_manager.py
-│   └── fixtures/
-│
-├── docs/
-│   ├── API.md
-│   └── USER_GUIDE.md
+│   ├── test_config.py
+│   ├── test_cli.py
+│   ├── test_content_analyzer.py
+│   ├── test_ai_inference.py
+│   ├── test_api_bookmarks.py
+│   ├── test_api_ingest.py
+│   └── test_api_recall.py
 │
 ├── pyproject.toml               # Project metadata and dependencies
 ├── requirements.txt             # Pinned dependencies
