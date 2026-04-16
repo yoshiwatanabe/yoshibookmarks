@@ -41,7 +41,7 @@ yoshibookmark init --storage-mode onedrive-only --onedrive-path "C:\Users\YourNa
 yoshibookmark serve
 ```
 
-The server will automatically select an available port and display the URL.
+The server binds to port 8000 by default. Use `--port` to specify a different port.
 
 ## Configuration
 
@@ -284,7 +284,7 @@ REST API available at `http://localhost:{port}/api/v1`:
 - `GET /ingest/providers/status` - Provider chain diagnostics for ingestion
 - `POST /recall/query` - Natural-language recall (hybrid keyword + semantic with fallback)
 
-See `docs/API.md` for complete API documentation.
+See the interactive API documentation at `http://127.0.0.1:{port}/docs` when the server is running.
 
 ## Development
 
