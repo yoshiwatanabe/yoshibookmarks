@@ -278,13 +278,16 @@ REST API available at `http://localhost:{port}/api/v1`:
 - `GET /bookmarks/{id}` - Get bookmark
 - `PUT /bookmarks/{id}` - Update bookmark
 - `DELETE /bookmarks/{id}` - Delete bookmark
+- `POST /bookmarks/{id}/restore` - Restore a soft-deleted bookmark
+- `POST /bookmarks/{id}/access` - Record bookmark access (updates `last_accessed`)
 - `POST /ingest/preview` - Generate capture suggestions for browser extension
 - `POST /ingest/commit` - Commit a preview into bookmark storage
 - `POST /ingest/quick-save` - Save directly from capture context
 - `GET /ingest/providers/status` - Provider chain diagnostics for ingestion
+- `GET /ingest/preview/{preview_id}/diagnostics` - Diagnostics for a specific preview
 - `POST /recall/query` - Natural-language recall (hybrid keyword + semantic with fallback)
 
-See `docs/API.md` for complete API documentation.
+Interactive API docs are available at `http://127.0.0.1:<port>/docs` when the server is running.
 
 ## Development
 
