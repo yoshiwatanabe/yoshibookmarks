@@ -18,7 +18,7 @@ A URL and bookmark management system with intelligent search, semantic discovery
 ### Requirements
 
 - Python 3.10 or higher
-- OpenAI API key (or Azure OpenAI)
+- An AI provider API key: OpenAI, Azure OpenAI, Anthropic, or Google Gemini
 
 ### Quick Start
 
@@ -41,7 +41,7 @@ yoshibookmark init --storage-mode onedrive-only --onedrive-path "C:\Users\YourNa
 yoshibookmark serve
 ```
 
-The server will automatically select an available port and display the URL.
+The server binds to port 8000 by default. Use `--port` to specify a different port.
 
 ## Configuration
 
@@ -117,6 +117,12 @@ OPENAI_API_VERSION=2024-02-15-preview
 OPENAI_API_BASE=https://api.your-service.com/v1
 OPENAI_API_KEY=your-key
 
+# OR: Anthropic Claude
+ANTHROPIC_API_KEY=sk-ant-your-key-here
+
+# OR: Google Gemini
+GOOGLE_API_KEY=your-google-api-key
+
 # Extension capture auth (local shared secret, not OAuth; same value used in extension settings)
 EXTENSION_API_TOKEN=your-random-local-token
 ```
@@ -151,7 +157,7 @@ content_analysis_model: gpt-4o-mini
 ### Starting the Server
 
 ```bash
-# Start with auto-selected port
+# Start with default port (8000)
 yoshibookmark serve
 
 # Specify port
