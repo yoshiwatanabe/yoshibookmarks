@@ -19,17 +19,18 @@
           │      FastAPI Application            │
           │  ┌────────────────────────────────┐ │
           │  │      API Routes Layer          │ │
-          │  │  /bookmarks, /search, /views   │ │
+          │  │  /bookmarks, /ingest, /recall  │ │
           │  └────────────┬───────────────────┘ │
           │               │                      │
           │  ┌────────────▼───────────────────┐ │
           │  │    Core Services Layer         │ │
           │  │  ┌──────────────────────────┐  │ │
           │  │  │ BookmarkManager          │  │ │
-          │  │  │ SearchEngine             │  │ │
+          │  │  │ RecallService            │  │ │
+          │  │  │ IngestionService         │  │ │
           │  │  │ StorageManager           │  │ │
           │  │  │ ContentAnalyzer          │  │ │
-          │  │  │ ScreenshotCapture        │  │ │
+          │  │  │ AIInferenceService       │  │ │
           │  │  └──────────────────────────┘  │ │
           │  └────────────┬───────────────────┘ │
           └───────────────┼─────────────────────┘
@@ -76,11 +77,22 @@
 - Last accessed timestamp tracking
 - Duplicate detection
 
-**SearchEngine**
-- Keyword/text search
-- Semantic search with OpenAI embeddings
+**RecallService**
+- Natural-language recall with hybrid keyword + semantic scoring
+- Keyword/text search with relevance scoring
+- Semantic search with OpenAI embeddings (when enabled)
 - Embedding cache management
 - Result ranking and filtering
+
+**IngestionService**
+- Preview generation for browser extension capture
+- Commit/quick-save flows for ingested bookmarks
+- Provider chain diagnostics
+
+**AIInferenceService**
+- Multi-provider AI inference with failover (OpenAI, Azure OpenAI, Anthropic, Gemini)
+- Content analysis prompt dispatch
+- Confidence scoring and provider health tracking
 
 **StorageManager**
 - YAML file I/O operations
@@ -94,13 +106,8 @@
 - Title extraction via OpenAI GPT
 - Keyword generation via OpenAI GPT
 - Favicon downloading
+- Screenshot capture via Playwright
 - Metadata extraction
-
-**ScreenshotCapture**
-- Playwright browser management
-- Screenshot capture with retries
-- Image optimization and storage
-- Error handling for dynamic pages
 
 ## 2. Technology Stack Details
 
@@ -292,25 +299,24 @@ yoshibookmark/
 ├── src/
 │   └── yoshibookmark/
 │       ├── __init__.py
-│       ├── __main__.py              # Entry point: python -m yoshibookmark
 │       ├── cli.py                   # CLI commands
 │       ├── config.py                # Configuration management
 │       │
 │       ├── api/                     # FastAPI routes
 │       │   ├── __init__.py
 │       │   ├── bookmarks.py         # Bookmark CRUD endpoints
-│       │   ├── search.py            # Search endpoints
-│       │   ├── views.py             # View-related endpoints
-│       │   ├── storage.py           # Storage management endpoints
+│       │   ├── ingest.py            # Ingestion endpoints (preview, commit, quick-save)
+│       │   ├── recall.py            # Recall/search endpoints
 │       │   └── health.py            # Health check endpoints
 │       │
 │       ├── core/                    # Core business logic
 │       │   ├── __init__.py
 │       │   ├── bookmark_manager.py  # Bookmark operations
-│       │   ├── search_engine.py     # Search logic
+│       │   ├── ai_inference.py      # Multi-provider AI inference service
+│       │   ├── ingestion_service.py # Ingestion/capture logic
+│       │   ├── recall_service.py    # Recall and search logic
 │       │   ├── storage_manager.py   # File I/O and indexing
-│       │   ├── content_analyzer.py  # Web content analysis
-│       │   └── screenshot.py        # Screenshot capture
+│       │   └── content_analyzer.py  # Web content analysis and screenshots
 │       │
 │       ├── models/                  # Pydantic models
 │       │   ├── __init__.py
@@ -325,27 +331,28 @@ yoshibookmark/
 │       │   └── url_utils.py         # URL validation/parsing
 │       │
 │       └── web/                     # Frontend assets
-│           ├── static/
-│           │   ├── css/
-│           │   │   └── style.css
-│           │   ├── js/
-│           │   │   ├── app.js
-│           │   │   ├── search.js
-│           │   │   └── views.js
-│           │   └── icons/
-│           └── templates/
+│           └── static/
+│               ├── css/
+│               │   └── styles.css
+│               ├── js/
+│               │   └── app.js
 │               └── index.html
+│
+├── extension/                       # Browser extension
+│   └── yoshibookmark-extension/
 │
 ├── tests/
 │   ├── __init__.py
+│   ├── test_ai_inference.py
+│   ├── test_api_bookmarks.py
+│   ├── test_api_ingest.py
+│   ├── test_api_recall.py
 │   ├── test_bookmark_manager.py
-│   ├── test_search_engine.py
-│   ├── test_storage_manager.py
-│   └── fixtures/
-│
-├── docs/
-│   ├── API.md
-│   └── USER_GUIDE.md
+│   ├── test_bookmark_model.py
+│   ├── test_cli.py
+│   ├── test_config.py
+│   ├── test_content_analyzer.py
+│   └── test_storage_manager.py
 │
 ├── pyproject.toml               # Project metadata and dependencies
 ├── requirements.txt             # Pinned dependencies
