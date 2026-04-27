@@ -19,17 +19,17 @@
           │      FastAPI Application            │
           │  ┌────────────────────────────────┐ │
           │  │      API Routes Layer          │ │
-          │  │  /bookmarks, /search, /views   │ │
+          │  │  /bookmarks, /ingest, /recall │ │
           │  └────────────┬───────────────────┘ │
           │               │                      │
           │  ┌────────────▼───────────────────┐ │
           │  │    Core Services Layer         │ │
           │  │  ┌──────────────────────────┐  │ │
           │  │  │ BookmarkManager          │  │ │
-          │  │  │ SearchEngine             │  │ │
+          │  │  │ RecallService            │  │ │
           │  │  │ StorageManager           │  │ │
           │  │  │ ContentAnalyzer          │  │ │
-          │  │  │ ScreenshotCapture        │  │ │
+          │  │  │ IngestionService         │  │ │
           │  │  └──────────────────────────┘  │ │
           │  └────────────┬───────────────────┘ │
           └───────────────┼─────────────────────┘
@@ -76,11 +76,11 @@
 - Last accessed timestamp tracking
 - Duplicate detection
 
-**SearchEngine**
+**RecallService**
 - Keyword/text search
 - Semantic search with OpenAI embeddings
 - Embedding cache management
-- Result ranking and filtering
+- Result ranking and filtering (hybrid scoring)
 
 **StorageManager**
 - YAML file I/O operations
@@ -96,11 +96,10 @@
 - Favicon downloading
 - Metadata extraction
 
-**ScreenshotCapture**
-- Playwright browser management
-- Screenshot capture with retries
-- Image optimization and storage
-- Error handling for dynamic pages
+**IngestionService**
+- Browser-extension capture workflow (preview/commit/quick-save)
+- Provider chain for AI inference with failover
+- Preview session management
 
 ## 2. Technology Stack Details
 
@@ -299,18 +298,18 @@ yoshibookmark/
 │       ├── api/                     # FastAPI routes
 │       │   ├── __init__.py
 │       │   ├── bookmarks.py         # Bookmark CRUD endpoints
-│       │   ├── search.py            # Search endpoints
-│       │   ├── views.py             # View-related endpoints
-│       │   ├── storage.py           # Storage management endpoints
+│       │   ├── recall.py            # Recall/search endpoints
+│       │   ├── ingest.py            # Ingestion endpoints (extension capture)
 │       │   └── health.py            # Health check endpoints
 │       │
 │       ├── core/                    # Core business logic
 │       │   ├── __init__.py
 │       │   ├── bookmark_manager.py  # Bookmark operations
-│       │   ├── search_engine.py     # Search logic
+│       │   ├── recall_service.py    # Hybrid keyword + semantic recall
+│       │   ├── ingestion_service.py # Extension capture workflow
+│       │   ├── ai_inference.py      # AI provider chain with failover
 │       │   ├── storage_manager.py   # File I/O and indexing
-│       │   ├── content_analyzer.py  # Web content analysis
-│       │   └── screenshot.py        # Screenshot capture
+│       │   └── content_analyzer.py  # Web content analysis
 │       │
 │       ├── models/                  # Pydantic models
 │       │   ├── __init__.py
@@ -325,27 +324,24 @@ yoshibookmark/
 │       │   └── url_utils.py         # URL validation/parsing
 │       │
 │       └── web/                     # Frontend assets
-│           ├── static/
-│           │   ├── css/
-│           │   │   └── style.css
-│           │   ├── js/
-│           │   │   ├── app.js
-│           │   │   ├── search.js
-│           │   │   └── views.js
-│           │   └── icons/
-│           └── templates/
+│           └── static/
+│               ├── css/
+│               │   └── styles.css
+│               ├── js/
+│               │   └── app.js
 │               └── index.html
 │
 ├── tests/
 │   ├── __init__.py
 │   ├── test_bookmark_manager.py
-│   ├── test_search_engine.py
+│   ├── test_bookmark_model.py
+│   ├── test_api_bookmarks.py
+│   ├── test_api_ingest.py
+│   ├── test_api_recall.py
+│   ├── test_ai_inference.py
 │   ├── test_storage_manager.py
-│   └── fixtures/
-│
-├── docs/
-│   ├── API.md
-│   └── USER_GUIDE.md
+│   ├── test_config.py
+│   └── test_content_analyzer.py
 │
 ├── pyproject.toml               # Project metadata and dependencies
 ├── requirements.txt             # Pinned dependencies
@@ -503,49 +499,39 @@ Response 200:
 }
 ```
 
-#### Search
+#### Recall
 
-**Keyword Search**
+**Natural-Language Recall (Hybrid)**
 ```http
-GET /api/v1/search?q={query}&storage={storage_name}&type=keyword
+POST /api/v1/recall/query
+Content-Type: application/json
+
+{
+  "query": "python style guide",
+  "limit": 20,
+  "scope": "all"
+}
 
 Response 200:
 {
-  "query": "python",
+  "query": "python style guide",
   "results": [
     {
       "id": "...",
       "url": "...",
       "title": "...",
-      "relevance_score": 0.95,
-      "matched_fields": ["keywords", "title"]
-    }
-  ],
-  "total": 15,
-  "search_type": "keyword"
-}
-```
-
-**Semantic Search**
-```http
-GET /api/v1/search?q={query}&storage={storage_name}&type=semantic
-
-Response 200:
-{
-  "query": "how to write good Python code",
-  "results": [
-    {
-      "id": "...",
-      "url": "...",
-      "title": "Python Best Practices Guide",
-      "relevance_score": 0.87,
-      "similarity": 0.87
+      "score": 0.87,
+      "keyword_score": 0.72,
+      "semantic_score": 0.95
     }
   ],
   "total": 8,
-  "search_type": "semantic"
+  "semantic_used": true,
+  "fallback_reason": null
 }
 ```
+
+> Note: Recall uses a hybrid keyword + semantic scoring strategy. If semantic search is unavailable (e.g., missing API key), it falls back to keyword-only scoring.
 
 #### Views
 
@@ -917,11 +903,11 @@ Respond in JSON format:
         return None
 ```
 
-### 6.3 SearchEngine
+### 6.3 RecallService
 
 ```python
-class SearchEngine:
-    """Handles keyword and semantic search."""
+class RecallService:
+    """Hybrid keyword + semantic recall over bookmark storage."""
 
     def __init__(self, openai_client: OpenAI, storage_manager: StorageManager):
         self.client = openai_client
@@ -1061,7 +1047,9 @@ class SearchEngine:
         return dot_product / (magnitude1 * magnitude2)
 ```
 
-### 6.4 ScreenshotCapture
+### 6.4 ScreenshotCapture (planned)
+
+> **Note**: Screenshot capture is a planned feature. The current implementation uses Playwright for webpage fetching and content analysis via `ContentAnalyzer`, but standalone `ScreenshotCapture` is not yet a separate service.
 
 ```python
 class ScreenshotCapture:
@@ -1218,11 +1206,12 @@ async function addBookmark(url) {
     return await response.json();
 }
 
-async function searchBookmarks(query, semantic = false) {
-    const type = semantic ? 'semantic' : 'keyword';
-    const url = `/api/v1/search?q=${encodeURIComponent(query)}&type=${type}`;
-
-    const response = await fetch(url);
+async function recallBookmarks(query) {
+    const response = await fetch('/api/v1/recall/query', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query, scope: 'all' }),
+    });
     const data = await response.json();
     return data.results;
 }
@@ -1294,7 +1283,7 @@ document.getElementById('search-input')?.addEventListener('input', (e) => {
         const semantic = document.getElementById('semantic-search').checked;
 
         if (query.length > 0) {
-            const results = await searchBookmarks(query, semantic);
+            const results = await recallBookmarks(query);
             renderBookmarks(results);
         } else {
             renderBookmarks(state.bookmarks);
@@ -1383,9 +1372,9 @@ def main():
 
 @main.command()
 @click.option('--host', default='127.0.0.1', help='Host to bind to')
-@click.option('--port', default=None, type=int, help='Port to bind to (auto-select if not specified)')
-@click.option('--config', default=None, help='Path to config file')
-def serve(host, port, config):
+@click.option('--port', default=8000, type=int, help='Port to bind to (default: 8000)')
+@click.option('--config-dir', default=None, help='Configuration directory (default: ~/.yoshibookmark)')
+def serve(host, port, config_dir):
     """Start the bookmark server."""
 
     # Load or create config
@@ -1398,14 +1387,6 @@ def serve(host, port, config):
         click.echo(f"No config found at {config_path}")
         click.echo("Run 'yoshibookmark init' first to create configuration")
         return
-
-    # Auto-select port if not specified
-    if port is None:
-        import socket
-        sock = socket.socket()
-        sock.bind(('', 0))
-        port = sock.getsockname()[1]
-        sock.close()
 
     click.echo(f"Starting YoshiBookmark server at http://{host}:{port}")
 
