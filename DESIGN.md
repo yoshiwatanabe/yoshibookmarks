@@ -292,25 +292,24 @@ yoshibookmark/
 ├── src/
 │   └── yoshibookmark/
 │       ├── __init__.py
-│       ├── __main__.py              # Entry point: python -m yoshibookmark
-│       ├── cli.py                   # CLI commands
+│       ├── cli.py                   # CLI commands (init, serve, doctor, migrate-to-onedrive)
 │       ├── config.py                # Configuration management
 │       │
 │       ├── api/                     # FastAPI routes
 │       │   ├── __init__.py
 │       │   ├── bookmarks.py         # Bookmark CRUD endpoints
-│       │   ├── search.py            # Search endpoints
-│       │   ├── views.py             # View-related endpoints
-│       │   ├── storage.py           # Storage management endpoints
-│       │   └── health.py            # Health check endpoints
+│       │   ├── ingest.py            # Browser-extension ingestion endpoints
+│       │   ├── recall.py            # Natural-language recall endpoints
+│       │   └── health.py            # Health check endpoint
 │       │
 │       ├── core/                    # Core business logic
 │       │   ├── __init__.py
 │       │   ├── bookmark_manager.py  # Bookmark operations
-│       │   ├── search_engine.py     # Search logic
 │       │   ├── storage_manager.py   # File I/O and indexing
 │       │   ├── content_analyzer.py  # Web content analysis
-│       │   └── screenshot.py        # Screenshot capture
+│       │   ├── ingestion_service.py # Browser-extension capture workflow
+│       │   ├── recall_service.py    # Hybrid recall (keyword + semantic)
+│       │   └── ai_inference.py      # AI provider chain (OpenAI, Azure, Anthropic, Gemini)
 │       │
 │       ├── models/                  # Pydantic models
 │       │   ├── __init__.py
@@ -325,27 +324,25 @@ yoshibookmark/
 │       │   └── url_utils.py         # URL validation/parsing
 │       │
 │       └── web/                     # Frontend assets
-│           ├── static/
-│           │   ├── css/
-│           │   │   └── style.css
-│           │   ├── js/
-│           │   │   ├── app.js
-│           │   │   ├── search.js
-│           │   │   └── views.js
-│           │   └── icons/
-│           └── templates/
-│               └── index.html
+│           └── static/
+│               ├── index.html
+│               ├── css/
+│               │   └── styles.css
+│               └── js/
+│                   └── app.js
 │
 ├── tests/
 │   ├── __init__.py
+│   ├── test_ai_inference.py
+│   ├── test_api_bookmarks.py
+│   ├── test_api_ingest.py
+│   ├── test_api_recall.py
 │   ├── test_bookmark_manager.py
-│   ├── test_search_engine.py
-│   ├── test_storage_manager.py
-│   └── fixtures/
-│
-├── docs/
-│   ├── API.md
-│   └── USER_GUIDE.md
+│   ├── test_bookmark_model.py
+│   ├── test_cli.py
+│   ├── test_config.py
+│   ├── test_content_analyzer.py
+│   └── test_storage_manager.py
 │
 ├── pyproject.toml               # Project metadata and dependencies
 ├── requirements.txt             # Pinned dependencies
