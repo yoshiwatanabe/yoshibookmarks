@@ -18,7 +18,7 @@ A URL and bookmark management system with intelligent search, semantic discovery
 ### Requirements
 
 - Python 3.10 or higher
-- OpenAI API key (or Azure OpenAI)
+- An AI provider API key: OpenAI, Azure OpenAI, Anthropic, or Google Gemini
 
 ### Quick Start
 
@@ -119,6 +119,10 @@ OPENAI_API_KEY=your-key
 
 # Extension capture auth (local shared secret, not OAuth; same value used in extension settings)
 EXTENSION_API_TOKEN=your-random-local-token
+
+# OR: Anthropic / Google Gemini (optional; used as fallback providers)
+# ANTHROPIC_API_KEY=your-anthropic-api-key-here
+# GOOGLE_API_KEY=your-google-api-key-here
 ```
 
 ### 2. `config.yaml` - Application Settings

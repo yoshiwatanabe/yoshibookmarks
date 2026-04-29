@@ -115,10 +115,11 @@
 - **Environment Variables**: python-dotenv
 
 ### AI/ML
+- **Multi-Provider Inference**: `MultiProviderInferenceService` supports OpenAI, Azure OpenAI, Anthropic, and Google Gemini with automatic fallback
 - **OpenAI Python SDK**: openai>=1.0.0
 - **Models**:
   - Embeddings: `text-embedding-3-small` (fast, cheap, good quality)
-  - Content Analysis: `gpt-4o-mini` (fast, cost-effective)
+  - Content Analysis: `gpt-4o-mini` (fast, cost-effective); Anthropic `claude-3-5-haiku-latest` and Google `gemini-2.0-flash` are also supported as fallback providers
 
 ### Frontend (MVP)
 - **HTML5/CSS3**: Semantic markup
@@ -1723,6 +1724,10 @@ OPENAI_API_KEY=sk-...
 # OR: Custom OpenAI-Compatible Endpoint
 # OPENAI_API_BASE=https://api.your-service.com/v1
 # OPENAI_API_KEY=your-api-key
+
+# Optional: Anthropic / Google Gemini (used as fallback providers)
+# ANTHROPIC_API_KEY=your-anthropic-api-key-here
+# GOOGLE_API_KEY=your-google-api-key-here
 ```
 
 ### .env.example (Template - commit this to git)
