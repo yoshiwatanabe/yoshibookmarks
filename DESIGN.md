@@ -292,25 +292,24 @@ yoshibookmark/
 ├── src/
 │   └── yoshibookmark/
 │       ├── __init__.py
-│       ├── __main__.py              # Entry point: python -m yoshibookmark
 │       ├── cli.py                   # CLI commands
 │       ├── config.py                # Configuration management
 │       │
 │       ├── api/                     # FastAPI routes
 │       │   ├── __init__.py
 │       │   ├── bookmarks.py         # Bookmark CRUD endpoints
-│       │   ├── search.py            # Search endpoints
-│       │   ├── views.py             # View-related endpoints
-│       │   ├── storage.py           # Storage management endpoints
-│       │   └── health.py            # Health check endpoints
+│       │   ├── health.py            # Health check endpoints
+│       │   ├── ingest.py            # Browser extension ingestion endpoints
+│       │   └── recall.py            # Natural-language recall endpoints
 │       │
 │       ├── core/                    # Core business logic
 │       │   ├── __init__.py
+│       │   ├── ai_inference.py      # OpenAI embedding and inference
 │       │   ├── bookmark_manager.py  # Bookmark operations
-│       │   ├── search_engine.py     # Search logic
-│       │   ├── storage_manager.py   # File I/O and indexing
 │       │   ├── content_analyzer.py  # Web content analysis
-│       │   └── screenshot.py        # Screenshot capture
+│       │   ├── ingestion_service.py # Browser extension ingestion logic
+│       │   ├── recall_service.py    # Natural-language recall logic
+│       │   └── storage_manager.py   # File I/O and indexing
 │       │
 │       ├── models/                  # Pydantic models
 │       │   ├── __init__.py
