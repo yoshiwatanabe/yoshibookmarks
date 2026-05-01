@@ -299,18 +299,18 @@ yoshibookmark/
 │       ├── api/                     # FastAPI routes
 │       │   ├── __init__.py
 │       │   ├── bookmarks.py         # Bookmark CRUD endpoints
-│       │   ├── search.py            # Search endpoints
-│       │   ├── views.py             # View-related endpoints
-│       │   ├── storage.py           # Storage management endpoints
+│       │   ├── ingest.py            # Browser-extension ingestion endpoints
+│       │   ├── recall.py            # Natural-language recall endpoints
 │       │   └── health.py            # Health check endpoints
 │       │
 │       ├── core/                    # Core business logic
 │       │   ├── __init__.py
 │       │   ├── bookmark_manager.py  # Bookmark operations
-│       │   ├── search_engine.py     # Search logic
+│       │   ├── ingestion_service.py # Ingestion pipeline
+│       │   ├── recall_service.py    # Recall/search logic
+│       │   ├── ai_inference.py      # Multi-provider AI inference
 │       │   ├── storage_manager.py   # File I/O and indexing
-│       │   ├── content_analyzer.py  # Web content analysis
-│       │   └── screenshot.py        # Screenshot capture
+│       │   └── content_analyzer.py  # Web content analysis
 │       │
 │       ├── models/                  # Pydantic models
 │       │   ├── __init__.py
