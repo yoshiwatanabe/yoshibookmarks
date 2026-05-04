@@ -41,7 +41,7 @@ yoshibookmark init --storage-mode onedrive-only --onedrive-path "C:\Users\YourNa
 yoshibookmark serve
 ```
 
-The server will automatically select an available port and display the URL.
+The server defaults to port 8000; use `--port` to specify a different port.
 
 ## Configuration
 
@@ -151,7 +151,7 @@ content_analysis_model: gpt-4o-mini
 ### Starting the Server
 
 ```bash
-# Start with auto-selected port
+# Start with default port (8000)
 yoshibookmark serve
 
 # Specify port
@@ -283,6 +283,9 @@ REST API available at `http://localhost:{port}/api/v1`:
 - `POST /ingest/quick-save` - Save directly from capture context
 - `GET /ingest/providers/status` - Provider chain diagnostics for ingestion
 - `POST /recall/query` - Natural-language recall (hybrid keyword + semantic with fallback)
+- `POST /bookmarks/{id}/restore` - Restore a soft-deleted bookmark
+- `POST /bookmarks/{id}/access` - Track bookmark access timestamp
+- `GET /ingest/preview/{preview_id}/diagnostics` - Preview entry diagnostics
 
 See `docs/API.md` for complete API documentation.
 
