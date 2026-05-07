@@ -19,17 +19,17 @@
           │      FastAPI Application            │
           │  ┌────────────────────────────────┐ │
           │  │      API Routes Layer          │ │
-          │  │  /bookmarks, /search, /views   │ │
+          │  │  /bookmarks, /ingest, /recall  │ │
           │  └────────────┬───────────────────┘ │
           │               │                      │
           │  ┌────────────▼───────────────────┐ │
           │  │    Core Services Layer         │ │
           │  │  ┌──────────────────────────┐  │ │
           │  │  │ BookmarkManager          │  │ │
-          │  │  │ SearchEngine             │  │ │
+          │  │  │ RecallService            │  │ │
           │  │  │ StorageManager           │  │ │
           │  │  │ ContentAnalyzer          │  │ │
-          │  │  │ ScreenshotCapture        │  │ │
+          │  │  │ IngestionService         │  │ │
           │  │  └──────────────────────────┘  │ │
           │  └────────────┬───────────────────┘ │
           └───────────────┼─────────────────────┘
@@ -76,7 +76,7 @@
 - Last accessed timestamp tracking
 - Duplicate detection
 
-**SearchEngine**
+**RecallService**
 - Keyword/text search
 - Semantic search with OpenAI embeddings
 - Embedding cache management
@@ -96,11 +96,10 @@
 - Favicon downloading
 - Metadata extraction
 
-**ScreenshotCapture**
-- Playwright browser management
-- Screenshot capture with retries
-- Image optimization and storage
-- Error handling for dynamic pages
+**IngestionService**
+- Browser extension preview/commit flow
+- Quick-save ingestion
+- Multi-provider AI inference for content analysis
 
 ## 2. Technology Stack Details
 
