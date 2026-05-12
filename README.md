@@ -18,7 +18,7 @@ A URL and bookmark management system with intelligent search, semantic discovery
 ### Requirements
 
 - Python 3.10 or higher
-- OpenAI API key (or Azure OpenAI)
+- An AI API key: OpenAI, Azure OpenAI, Anthropic, or Google Gemini (at least one required)
 
 ### Quick Start
 
@@ -116,6 +116,12 @@ OPENAI_API_VERSION=2024-02-15-preview
 # OR: Custom OpenAI-Compatible Endpoint
 OPENAI_API_BASE=https://api.your-service.com/v1
 OPENAI_API_KEY=your-key
+
+# OR: Anthropic Claude
+ANTHROPIC_API_KEY=your-anthropic-key
+
+# OR: Google Gemini
+GOOGLE_API_KEY=your-google-key
 
 # Extension capture auth (local shared secret, not OAuth; same value used in extension settings)
 EXTENSION_API_TOKEN=your-random-local-token
@@ -277,14 +283,17 @@ REST API available at `http://localhost:{port}/api/v1`:
 - `GET /bookmarks` - List bookmarks
 - `GET /bookmarks/{id}` - Get bookmark
 - `PUT /bookmarks/{id}` - Update bookmark
-- `DELETE /bookmarks/{id}` - Delete bookmark
+- `DELETE /bookmarks/{id}` - Delete bookmark (soft by default)
+- `POST /bookmarks/{id}/restore` - Restore a soft-deleted bookmark
+- `POST /bookmarks/{id}/access` - Record bookmark access (updates last_accessed)
 - `POST /ingest/preview` - Generate capture suggestions for browser extension
 - `POST /ingest/commit` - Commit a preview into bookmark storage
 - `POST /ingest/quick-save` - Save directly from capture context
 - `GET /ingest/providers/status` - Provider chain diagnostics for ingestion
+- `GET /ingest/preview/{preview_id}/diagnostics` - Diagnostics for a specific preview
 - `POST /recall/query` - Natural-language recall (hybrid keyword + semantic with fallback)
 
-See `docs/API.md` for complete API documentation.
+Interactive API docs are available at `http://127.0.0.1:{port}/docs`.
 
 ## Development
 
@@ -392,8 +401,8 @@ MIT License - See LICENSE file for details
 
 ## Support
 
-- **Issues**: https://github.com/yourusername/yoshibookmark/issues
-- **Documentation**: See `docs/` directory
+- **Issues**: https://github.com/yourusername/yoshibookmarks/issues
+- **API Docs**: Interactive docs available at `http://127.0.0.1:{port}/docs` when server is running
 - **Design**: See `DESIGN.md` for technical details
 
 ## Acknowledgments
