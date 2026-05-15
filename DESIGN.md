@@ -19,17 +19,18 @@
           │      FastAPI Application            │
           │  ┌────────────────────────────────┐ │
           │  │      API Routes Layer          │ │
-          │  │  /bookmarks, /search, /views   │ │
+          │  │  /bookmarks, /ingest, /recall  │ │
           │  └────────────┬───────────────────┘ │
           │               │                      │
           │  ┌────────────▼───────────────────┐ │
           │  │    Core Services Layer         │ │
           │  │  ┌──────────────────────────┐  │ │
           │  │  │ BookmarkManager          │  │ │
-          │  │  │ SearchEngine             │  │ │
+          │  │  │ IngestionService         │  │ │
+          │  │  │ RecallService            │  │ │
           │  │  │ StorageManager           │  │ │
           │  │  │ ContentAnalyzer          │  │ │
-          │  │  │ ScreenshotCapture        │  │ │
+          │  │  │ AIInferenceService       │  │ │
           │  │  └──────────────────────────┘  │ │
           │  └────────────┬───────────────────┘ │
           └───────────────┼─────────────────────┘
@@ -76,11 +77,17 @@
 - Last accessed timestamp tracking
 - Duplicate detection
 
-**SearchEngine**
-- Keyword/text search
-- Semantic search with OpenAI embeddings
-- Embedding cache management
-- Result ranking and filtering
+**IngestionService**
+- Browser extension capture workflows (preview, commit, quick-save)
+- Multi-provider AI inference with failover
+- Preview session management (TTL-based)
+- Provider chain diagnostics
+
+**RecallService**
+- Hybrid keyword + semantic bookmark recall
+- Natural-language query processing
+- Result ranking and scoring
+- Fallback to keyword-only if semantic unavailable
 
 **StorageManager**
 - YAML file I/O operations
@@ -96,11 +103,10 @@
 - Favicon downloading
 - Metadata extraction
 
-**ScreenshotCapture**
-- Playwright browser management
-- Screenshot capture with retries
-- Image optimization and storage
-- Error handling for dynamic pages
+**AIInferenceService** (`ai_inference.py`)
+- Multi-provider inference with ordered failover (OpenAI, Azure OpenAI, Anthropic, Gemini)
+- Structured metadata generation from page context
+- Per-provider attempt diagnostics
 
 ## 2. Technology Stack Details
 
@@ -249,6 +255,14 @@ class EnvSettings(BaseSettings):
     # Azure OpenAI (if using Azure)
     azure_openai_endpoint: Optional[str] = None
     azure_openai_deployment_name: Optional[str] = None
+    azure_openai_api_key: Optional[str] = None
+
+    # Additional AI providers
+    anthropic_api_key: Optional[str] = None
+    google_api_key: Optional[str] = None  # For Gemini
+
+    # Extension/API auth
+    extension_api_token: Optional[str] = None  # Bearer token for ingestion endpoints
 
     model_config = SettingsConfigDict(
         env_file=".env",
@@ -265,6 +279,10 @@ class AppConfig(BaseModel):
 
     # Storage
     storage_locations: List[StorageLocation]
+    storage_mode: str = "multi"  # "multi" or "onedrive_only"
+    primary_storage_provider: str = "filesystem"  # "filesystem" or "onedrive_local"
+    primary_storage_path: Optional[str] = None
+    legacy_storage_readonly: bool = False
 
     # Features
     enable_semantic_search: bool = True
@@ -279,6 +297,23 @@ class AppConfig(BaseModel):
     cache_embeddings: bool = True
     max_cache_size_mb: int = 100
 
+    # Extension/ingestion auth
+    extension_allowed_origins: List[str] = []
+    ingest_require_auth: bool = True
+    ingest_preview_ttl_seconds: int = 900
+
+    # Multi-provider AI inference
+    agent_providers: List[str] = ["openai", "azureopenai", "anthropic", "gemini"]
+    agent_default_model: str = "gpt-5-mini"
+    agent_timeout_seconds: int = 20
+    agent_confidence_threshold: float = 0.65
+
+    # Recall settings
+    recall_default_limit: int = 20
+    recall_max_limit: int = 50
+    recall_semantic_weight: float = 0.55
+    recall_keyword_weight: float = 0.45
+
     # Logging
     log_level: str = "INFO"
 ```
@@ -292,25 +327,24 @@ yoshibookmark/
 ├── src/
 │   └── yoshibookmark/
 │       ├── __init__.py
-│       ├── __main__.py              # Entry point: python -m yoshibookmark
 │       ├── cli.py                   # CLI commands
 │       ├── config.py                # Configuration management
 │       │
 │       ├── api/                     # FastAPI routes
 │       │   ├── __init__.py
 │       │   ├── bookmarks.py         # Bookmark CRUD endpoints
-│       │   ├── search.py            # Search endpoints
-│       │   ├── views.py             # View-related endpoints
-│       │   ├── storage.py           # Storage management endpoints
-│       │   └── health.py            # Health check endpoints
+│       │   ├── ingest.py            # Browser-extension capture endpoints
+│       │   ├── recall.py            # Natural-language recall endpoint
+│       │   └── health.py            # Health check endpoint
 │       │
 │       ├── core/                    # Core business logic
 │       │   ├── __init__.py
-│       │   ├── bookmark_manager.py  # Bookmark operations
-│       │   ├── search_engine.py     # Search logic
-│       │   ├── storage_manager.py   # File I/O and indexing
+│       │   ├── ai_inference.py      # Multi-provider AI inference with failover
+│       │   ├── bookmark_manager.py  # Bookmark CRUD operations
 │       │   ├── content_analyzer.py  # Web content analysis
-│       │   └── screenshot.py        # Screenshot capture
+│       │   ├── ingestion_service.py # Capture preview/commit/quick-save logic
+│       │   ├── recall_service.py    # Hybrid keyword + semantic recall
+│       │   └── storage_manager.py   # File I/O and indexing
 │       │
 │       ├── models/                  # Pydantic models
 │       │   ├── __init__.py
@@ -325,27 +359,26 @@ yoshibookmark/
 │       │   └── url_utils.py         # URL validation/parsing
 │       │
 │       └── web/                     # Frontend assets
-│           ├── static/
-│           │   ├── css/
-│           │   │   └── style.css
-│           │   ├── js/
-│           │   │   ├── app.js
-│           │   │   ├── search.js
-│           │   │   └── views.js
-│           │   └── icons/
-│           └── templates/
+│           └── static/
+│               ├── css/
+│               │   └── styles.css
+│               ├── js/
+│               │   └── app.js
 │               └── index.html
+│
+├── extension/
+│   └── yoshibookmark-extension/     # Browser extension (Chrome/Edge)
+│       ├── manifest.json
+│       ├── popup.html / popup.js / popup.css
+│       ├── options.html / options.js / options.css
+│       ├── api-client.js
+│       └── content.js
 │
 ├── tests/
 │   ├── __init__.py
 │   ├── test_bookmark_manager.py
-│   ├── test_search_engine.py
 │   ├── test_storage_manager.py
 │   └── fixtures/
-│
-├── docs/
-│   ├── API.md
-│   └── USER_GUIDE.md
 │
 ├── pyproject.toml               # Project metadata and dependencies
 ├── requirements.txt             # Pinned dependencies
@@ -477,7 +510,12 @@ Response 200:
 ```http
 DELETE /api/v1/bookmarks/{id}?hard=true
 
-Response 204 No Content
+Response 200:
+{
+  "id": "...",
+  "url": "...",
+  ...  // Returns the deleted bookmark object
+}
 ```
 
 **Restore Bookmark**
@@ -698,7 +736,13 @@ Response 200:
   "status": "healthy",
   "version": "0.1.0",
   "storage_accessible": true,
-  "openai_configured": true
+  "storage_count": 1,
+  "current_storage": "onedrive",
+  "storage_mode": "onedrive_only",
+  "primary_storage_provider": "onedrive_local",
+  "primary_storage_path": "/path/to/onedrive/yoshibookmark",
+  "conflict_count": 0,
+  "recent_conflicts": []
 }
 ```
 
