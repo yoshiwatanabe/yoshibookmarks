@@ -76,7 +76,7 @@
 - Last accessed timestamp tracking
 - Duplicate detection
 
-**SearchEngine**
+**RecallService**
 - Keyword/text search
 - Semantic search with OpenAI embeddings
 - Embedding cache management
@@ -95,12 +95,7 @@
 - Keyword generation via OpenAI GPT
 - Favicon downloading
 - Metadata extraction
-
-**ScreenshotCapture**
-- Playwright browser management
-- Screenshot capture with retries
-- Image optimization and storage
-- Error handling for dynamic pages
+- Screenshot capture via Playwright (headless browser)
 
 ## 2. Technology Stack Details
 
@@ -292,25 +287,24 @@ yoshibookmark/
 ├── src/
 │   └── yoshibookmark/
 │       ├── __init__.py
-│       ├── __main__.py              # Entry point: python -m yoshibookmark
 │       ├── cli.py                   # CLI commands
 │       ├── config.py                # Configuration management
 │       │
 │       ├── api/                     # FastAPI routes
-│       │   ├── __init__.py
+│       │   ├── __init__.py          # App factory and lifespan
 │       │   ├── bookmarks.py         # Bookmark CRUD endpoints
-│       │   ├── search.py            # Search endpoints
-│       │   ├── views.py             # View-related endpoints
-│       │   ├── storage.py           # Storage management endpoints
-│       │   └── health.py            # Health check endpoints
+│       │   ├── ingest.py            # Ingestion endpoints (browser extension)
+│       │   ├── recall.py            # Natural-language recall endpoint
+│       │   └── health.py            # Health check endpoint
 │       │
 │       ├── core/                    # Core business logic
 │       │   ├── __init__.py
 │       │   ├── bookmark_manager.py  # Bookmark operations
-│       │   ├── search_engine.py     # Search logic
+│       │   ├── recall_service.py    # Recall / search logic
+│       │   ├── ingestion_service.py # Ingestion workflow
+│       │   ├── ai_inference.py      # Multi-provider AI inference
 │       │   ├── storage_manager.py   # File I/O and indexing
-│       │   ├── content_analyzer.py  # Web content analysis
-│       │   └── screenshot.py        # Screenshot capture
+│       │   └── content_analyzer.py  # Web content analysis and screenshots
 │       │
 │       ├── models/                  # Pydantic models
 │       │   ├── __init__.py
@@ -325,27 +319,19 @@ yoshibookmark/
 │       │   └── url_utils.py         # URL validation/parsing
 │       │
 │       └── web/                     # Frontend assets
-│           ├── static/
-│           │   ├── css/
-│           │   │   └── style.css
-│           │   ├── js/
-│           │   │   ├── app.js
-│           │   │   ├── search.js
-│           │   │   └── views.js
-│           │   └── icons/
-│           └── templates/
+│           └── static/
+│               ├── css/
+│               │   └── styles.css
+│               ├── js/
+│               │   └── app.js
 │               └── index.html
 │
 ├── tests/
 │   ├── __init__.py
-│   ├── test_bookmark_manager.py
-│   ├── test_search_engine.py
-│   ├── test_storage_manager.py
-│   └── fixtures/
+│   └── ...
 │
-├── docs/
-│   ├── API.md
-│   └── USER_GUIDE.md
+├── extension/                       # Browser extension
+│   └── yoshibookmark-extension/
 │
 ├── pyproject.toml               # Project metadata and dependencies
 ├── requirements.txt             # Pinned dependencies
