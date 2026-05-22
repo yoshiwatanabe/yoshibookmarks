@@ -19,17 +19,18 @@
           │      FastAPI Application            │
           │  ┌────────────────────────────────┐ │
           │  │      API Routes Layer          │ │
-          │  │  /bookmarks, /search, /views   │ │
+          │  │  /bookmarks, /ingest, /recall  │ │
           │  └────────────┬───────────────────┘ │
           │               │                      │
           │  ┌────────────▼───────────────────┐ │
           │  │    Core Services Layer         │ │
           │  │  ┌──────────────────────────┐  │ │
           │  │  │ BookmarkManager          │  │ │
-          │  │  │ SearchEngine             │  │ │
+          │  │  │ RecallService            │  │ │
+          │  │  │ IngestionService         │  │ │
           │  │  │ StorageManager           │  │ │
           │  │  │ ContentAnalyzer          │  │ │
-          │  │  │ ScreenshotCapture        │  │ │
+          │  │  │ MultiProviderInference   │  │ │
           │  │  └──────────────────────────┘  │ │
           │  └────────────┬───────────────────┘ │
           └───────────────┼─────────────────────┘
@@ -76,9 +77,14 @@
 - Last accessed timestamp tracking
 - Duplicate detection
 
-**SearchEngine**
-- Keyword/text search
-- Semantic search with OpenAI embeddings
+**IngestionService**
+- Browser-extension capture workflow (preview, commit, quick-save)
+- Multi-provider AI metadata generation with failover
+- Provider chain diagnostics
+
+**RecallService**
+- Hybrid keyword + semantic search over bookmark storage
+- OpenAI-embedding-based semantic scoring with keyword fallback
 - Embedding cache management
 - Result ranking and filtering
 
@@ -91,16 +97,16 @@
 
 **ContentAnalyzer**
 - Webpage fetching and parsing
-- Title extraction via OpenAI GPT
-- Keyword generation via OpenAI GPT
+- Title extraction via AI (multi-provider)
+- Keyword generation via AI (multi-provider)
 - Favicon downloading
 - Metadata extraction
+- Screenshot capture via Playwright
 
-**ScreenshotCapture**
-- Playwright browser management
-- Screenshot capture with retries
-- Image optimization and storage
-- Error handling for dynamic pages
+**MultiProviderInferenceService**
+- Provider-chain failover (OpenAI, Azure OpenAI, Anthropic Claude, Google Gemini)
+- Structured JSON metadata generation
+- Per-provider diagnostics and error classification
 
 ## 2. Technology Stack Details
 
@@ -115,10 +121,11 @@
 - **Environment Variables**: python-dotenv
 
 ### AI/ML
+- **Multi-provider inference**: OpenAI, Azure OpenAI, Anthropic Claude, Google Gemini (with failover)
 - **OpenAI Python SDK**: openai>=1.0.0
-- **Models**:
+- **Models (defaults)**:
   - Embeddings: `text-embedding-3-small` (fast, cheap, good quality)
-  - Content Analysis: `gpt-4o-mini` (fast, cost-effective)
+  - Content Analysis: `gpt-4o-mini` (OpenAI) / `claude-3-5-haiku-latest` (Anthropic) / `gemini-2.0-flash` (Gemini)
 
 ### Frontend (MVP)
 - **HTML5/CSS3**: Semantic markup
@@ -292,25 +299,24 @@ yoshibookmark/
 ├── src/
 │   └── yoshibookmark/
 │       ├── __init__.py
-│       ├── __main__.py              # Entry point: python -m yoshibookmark
 │       ├── cli.py                   # CLI commands
 │       ├── config.py                # Configuration management
 │       │
 │       ├── api/                     # FastAPI routes
 │       │   ├── __init__.py
 │       │   ├── bookmarks.py         # Bookmark CRUD endpoints
-│       │   ├── search.py            # Search endpoints
-│       │   ├── views.py             # View-related endpoints
-│       │   ├── storage.py           # Storage management endpoints
+│       │   ├── ingest.py            # Extension ingestion endpoints
+│       │   ├── recall.py            # Recall/search endpoints
 │       │   └── health.py            # Health check endpoints
 │       │
 │       ├── core/                    # Core business logic
 │       │   ├── __init__.py
 │       │   ├── bookmark_manager.py  # Bookmark operations
-│       │   ├── search_engine.py     # Search logic
+│       │   ├── ai_inference.py      # Multi-provider AI inference with failover
+│       │   ├── ingestion_service.py # Browser-extension capture workflow
+│       │   ├── recall_service.py    # Hybrid keyword + semantic recall
 │       │   ├── storage_manager.py   # File I/O and indexing
-│       │   ├── content_analyzer.py  # Web content analysis
-│       │   └── screenshot.py        # Screenshot capture
+│       │   └── content_analyzer.py  # Web content analysis and screenshots
 │       │
 │       ├── models/                  # Pydantic models
 │       │   ├── __init__.py
@@ -338,10 +344,16 @@ yoshibookmark/
 │
 ├── tests/
 │   ├── __init__.py
+│   ├── test_ai_inference.py
+│   ├── test_api_bookmarks.py
+│   ├── test_api_ingest.py
+│   ├── test_api_recall.py
 │   ├── test_bookmark_manager.py
-│   ├── test_search_engine.py
-│   ├── test_storage_manager.py
-│   └── fixtures/
+│   ├── test_bookmark_model.py
+│   ├── test_cli.py
+│   ├── test_config.py
+│   ├── test_content_analyzer.py
+│   └── test_storage_manager.py
 │
 ├── docs/
 │   ├── API.md
@@ -503,48 +515,60 @@ Response 200:
 }
 ```
 
-#### Search
+#### Recall
 
-**Keyword Search**
+**Natural-Language Recall (hybrid keyword + semantic)**
 ```http
-GET /api/v1/search?q={query}&storage={storage_name}&type=keyword
+POST /api/v1/recall/query
+
+Request:
+{
+  "query": "python style guide",
+  "limit": 10,
+  "scope": "all"
+}
 
 Response 200:
 {
-  "query": "python",
+  "query": "python style guide",
   "results": [
     {
       "id": "...",
       "url": "...",
       "title": "...",
       "relevance_score": 0.95,
-      "matched_fields": ["keywords", "title"]
+      "keyword_score": 0.9,
+      "semantic_score": 0.87
     }
   ],
   "total": 15,
-  "search_type": "keyword"
+  "semantic_available": true
 }
 ```
 
-**Semantic Search**
-```http
-GET /api/v1/search?q={query}&storage={storage_name}&type=semantic
+`scope` can be `"all"` (search all storages) or `"current"` (search current storage only).
+Semantic scoring falls back to keyword-only if embeddings are unavailable.
 
-Response 200:
-{
-  "query": "how to write good Python code",
-  "results": [
-    {
-      "id": "...",
-      "url": "...",
-      "title": "Python Best Practices Guide",
-      "relevance_score": 0.87,
-      "similarity": 0.87
-    }
-  ],
-  "total": 8,
-  "search_type": "semantic"
-}
+#### Ingestion
+
+**Preview (generate metadata suggestions)**
+```http
+POST /api/v1/ingest/preview
+```
+
+**Commit Preview to Storage**
+```http
+POST /api/v1/ingest/commit
+```
+
+**Quick Save**
+```http
+POST /api/v1/ingest/quick-save
+```
+
+**Provider Status**
+```http
+GET /api/v1/ingest/providers/status
 ```
 
 #### Views
@@ -917,207 +941,40 @@ Respond in JSON format:
         return None
 ```
 
-### 6.3 SearchEngine
+### 6.3 RecallService
+
+The `RecallService` handles hybrid keyword + semantic recall. Below is a simplified
+illustration of the core approach (see `src/yoshibookmark/core/recall_service.py` for
+the authoritative implementation):
 
 ```python
-class SearchEngine:
-    """Handles keyword and semantic search."""
+class RecallService:
+    """Hybrid keyword + semantic recall over bookmark storage."""
 
-    def __init__(self, openai_client: OpenAI, storage_manager: StorageManager):
-        self.client = openai_client
+    def __init__(self, config: AppConfig, storage_manager: StorageManager, env_settings: EnvSettings):
+        self.config = config
         self.storage_manager = storage_manager
-        self.embedding_cache: Dict[str, List[float]] = {}
+        self.env_settings = env_settings
+        self._embedding_cache: Dict[str, Any] = {}
 
-    async def keyword_search(
+    async def query(
         self,
-        query: str,
-        storage_name: Optional[str] = None
-    ) -> List[Tuple[Bookmark, float]]:
-        """Perform keyword/text search with relevance scoring."""
-
-        bookmarks = self.storage_manager.get_bookmarks(storage_name)
-        query_lower = query.lower()
-        results = []
-
-        for bookmark in bookmarks:
-            score = 0.0
-            matched_fields = []
-
-            # Search in title (highest weight)
-            if query_lower in bookmark.title.lower():
-                score += 1.0
-                matched_fields.append("title")
-
-            # Search in keywords (high weight)
-            for keyword in bookmark.keywords:
-                if query_lower in keyword.lower():
-                    score += 0.8
-                    matched_fields.append("keywords")
-                    break
-
-            # Search in description
-            if bookmark.description and query_lower in bookmark.description.lower():
-                score += 0.5
-                matched_fields.append("description")
-
-            # Search in URL
-            if query_lower in str(bookmark.url).lower():
-                score += 0.3
-                matched_fields.append("url")
-
-            # Search in tags
-            for tag in bookmark.tags:
-                if query_lower in tag.lower():
-                    score += 0.6
-                    matched_fields.append("tags")
-                    break
-
-            if score > 0:
-                results.append((bookmark, score))
-
-        # Sort by score descending
-        results.sort(key=lambda x: x[1], reverse=True)
-
-        return results
-
-    async def semantic_search(
-        self,
-        query: str,
-        storage_name: Optional[str] = None,
-        top_k: int = 20
-    ) -> List[Tuple[Bookmark, float]]:
-        """Perform semantic search using OpenAI embeddings."""
-
-        # Get query embedding
-        query_embedding = await self.get_embedding(query)
-
-        # Get all bookmarks
-        bookmarks = self.storage_manager.get_bookmarks(storage_name)
-
-        # Compute similarities
-        similarities = []
-        for bookmark in bookmarks:
-            # Get bookmark embedding (from cache or compute)
-            bookmark_text = self.prepare_bookmark_text(bookmark)
-            bookmark_embedding = await self.get_embedding(bookmark_text, bookmark.id)
-
-            # Compute cosine similarity
-            similarity = self.cosine_similarity(query_embedding, bookmark_embedding)
-            similarities.append((bookmark, similarity))
-
-        # Sort by similarity descending
-        similarities.sort(key=lambda x: x[1], reverse=True)
-
-        return similarities[:top_k]
-
-    async def get_embedding(self, text: str, cache_key: Optional[str] = None) -> List[float]:
-        """Get embedding from cache or OpenAI API."""
-
-        if cache_key and cache_key in self.embedding_cache:
-            return self.embedding_cache[cache_key]
-
-        try:
-            response = await asyncio.to_thread(
-                self.client.embeddings.create,
-                model="text-embedding-3-small",
-                input=text
-            )
-
-            embedding = response.data[0].embedding
-
-            # Cache it
-            if cache_key:
-                self.embedding_cache[cache_key] = embedding
-
-            return embedding
-
-        except Exception as e:
-            logger.error(f"Failed to get embedding: {e}")
-            # Return zero vector as fallback
-            return [0.0] * 1536
-
-    def prepare_bookmark_text(self, bookmark: Bookmark) -> str:
-        """Prepare bookmark text for embedding."""
-        parts = [
-            bookmark.title,
-            " ".join(bookmark.keywords),
-            bookmark.description or "",
-            " ".join(bookmark.tags)
-        ]
-        return " ".join(parts)
-
-    @staticmethod
-    def cosine_similarity(vec1: List[float], vec2: List[float]) -> float:
-        """Compute cosine similarity between two vectors."""
-        import math
-
-        dot_product = sum(a * b for a, b in zip(vec1, vec2))
-        magnitude1 = math.sqrt(sum(a * a for a in vec1))
-        magnitude2 = math.sqrt(sum(b * b for b in vec2))
-
-        if magnitude1 == 0 or magnitude2 == 0:
-            return 0.0
-
-        return dot_product / (magnitude1 * magnitude2)
+        query_text: str,
+        limit: Optional[int] = None,
+        scope: str = "all",
+        current_storage: Optional[str] = None,
+    ) -> dict:
+        """Run recall query and return ranked results (keyword + optional semantic)."""
+        ...
 ```
 
-### 6.4 ScreenshotCapture
+### 6.4 ContentAnalyzer (Screenshots)
 
-```python
-class ScreenshotCapture:
-    """Captures webpage screenshots using Playwright."""
-
-    def __init__(self):
-        self.playwright = None
-        self.browser = None
-
-    async def initialize(self):
-        """Initialize Playwright browser."""
-        from playwright.async_api import async_playwright
-
-        self.playwright = await async_playwright().start()
-        self.browser = await self.playwright.chromium.launch(headless=True)
-
-    async def capture_screenshot(
-        self,
-        url: str,
-        storage_path: Path,
-        bookmark_id: str,
-        timeout: int = 10
-    ) -> Optional[str]:
-        """Capture screenshot of URL."""
-
-        if not self.browser:
-            await self.initialize()
-
-        try:
-            page = await self.browser.new_page(viewport={"width": 1280, "height": 720})
-
-            # Navigate with timeout
-            await page.goto(url, timeout=timeout * 1000, wait_until="networkidle")
-
-            # Capture screenshot
-            screenshot_filename = f"{bookmark_id}.png"
-            screenshot_path = storage_path / "screenshots" / screenshot_filename
-            screenshot_path.parent.mkdir(parents=True, exist_ok=True)
-
-            await page.screenshot(path=str(screenshot_path), full_page=False)
-
-            await page.close()
-
-            return f"screenshots/{screenshot_filename}"
-
-        except Exception as e:
-            logger.error(f"Failed to capture screenshot for {url}: {e}")
-            return None
-
-    async def cleanup(self):
-        """Close browser and cleanup."""
-        if self.browser:
-            await self.browser.close()
-        if self.playwright:
-            await self.playwright.stop()
-```
+Screenshot capture is handled directly within `ContentAnalyzer`
+(`src/yoshibookmark/core/content_analyzer.py`) using Playwright, rather than a
+separate `ScreenshotCapture` class. The analyzer manages browser lifecycle, captures
+per-bookmark screenshots, and stores them under `screenshots/` in the active storage
+location.
 
 ## 7. Frontend Design (MVP)
 
