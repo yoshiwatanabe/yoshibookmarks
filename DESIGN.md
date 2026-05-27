@@ -26,10 +26,10 @@
           │  │    Core Services Layer         │ │
           │  │  ┌──────────────────────────┐  │ │
           │  │  │ BookmarkManager          │  │ │
-          │  │  │ SearchEngine             │  │ │
+          │  │  │ RecallService            │  │ │
           │  │  │ StorageManager           │  │ │
           │  │  │ ContentAnalyzer          │  │ │
-          │  │  │ ScreenshotCapture        │  │ │
+          │  │  │ IngestionService         │  │ │
           │  │  └──────────────────────────┘  │ │
           │  └────────────┬───────────────────┘ │
           └───────────────┼─────────────────────┘
@@ -76,11 +76,11 @@
 - Last accessed timestamp tracking
 - Duplicate detection
 
-**SearchEngine**
+**RecallService**
 - Keyword/text search
-- Semantic search with OpenAI embeddings
-- Embedding cache management
+- Semantic search with multi-provider AI embeddings
 - Result ranking and filtering
+- Hybrid keyword + semantic scoring with fallback
 
 **StorageManager**
 - YAML file I/O operations
@@ -96,11 +96,11 @@
 - Favicon downloading
 - Metadata extraction
 
-**ScreenshotCapture**
-- Playwright browser management
-- Screenshot capture with retries
+**IngestionService**
+- Browser extension capture workflow (preview/commit/quick-save)
+- Provider chain orchestration for AI inference
+- Screenshot capture via Playwright
 - Image optimization and storage
-- Error handling for dynamic pages
 
 ## 2. Technology Stack Details
 
@@ -116,9 +116,10 @@
 
 ### AI/ML
 - **OpenAI Python SDK**: openai>=1.0.0
+- **Multi-provider inference**: OpenAI, Azure OpenAI, Anthropic, Google Gemini (failover chain)
 - **Models**:
   - Embeddings: `text-embedding-3-small` (fast, cheap, good quality)
-  - Content Analysis: `gpt-4o-mini` (fast, cost-effective)
+  - Content Analysis: `gpt-4o-mini` (fast, cost-effective; configurable per provider)
 
 ### Frontend (MVP)
 - **HTML5/CSS3**: Semantic markup

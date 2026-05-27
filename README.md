@@ -41,7 +41,7 @@ yoshibookmark init --storage-mode onedrive-only --onedrive-path "C:\Users\YourNa
 yoshibookmark serve
 ```
 
-The server will automatically select an available port and display the URL.
+The server defaults to port 8000 (configurable with `--port`).
 
 ## Configuration
 
@@ -116,6 +116,12 @@ OPENAI_API_VERSION=2024-02-15-preview
 # OR: Custom OpenAI-Compatible Endpoint
 OPENAI_API_BASE=https://api.your-service.com/v1
 OPENAI_API_KEY=your-key
+
+# OR: Anthropic
+ANTHROPIC_API_KEY=your-anthropic-key
+
+# OR: Google Gemini
+GOOGLE_API_KEY=your-google-key
 
 # Extension capture auth (local shared secret, not OAuth; same value used in extension settings)
 EXTENSION_API_TOKEN=your-random-local-token
@@ -282,9 +288,12 @@ REST API available at `http://localhost:{port}/api/v1`:
 - `POST /ingest/commit` - Commit a preview into bookmark storage
 - `POST /ingest/quick-save` - Save directly from capture context
 - `GET /ingest/providers/status` - Provider chain diagnostics for ingestion
+- `GET /ingest/preview/{id}/diagnostics` - Get provider trace for a specific preview
+- `POST /bookmarks/{id}/restore` - Restore a soft-deleted bookmark
+- `POST /bookmarks/{id}/access` - Track access (updates last_accessed timestamp)
 - `POST /recall/query` - Natural-language recall (hybrid keyword + semantic with fallback)
 
-See `docs/API.md` for complete API documentation.
+See `/docs` (Swagger UI) for interactive API documentation when the server is running.
 
 ## Development
 
