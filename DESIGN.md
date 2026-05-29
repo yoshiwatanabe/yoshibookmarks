@@ -19,17 +19,17 @@
           │      FastAPI Application            │
           │  ┌────────────────────────────────┐ │
           │  │      API Routes Layer          │ │
-          │  │  /bookmarks, /search, /views   │ │
+          │  │  /bookmarks, /ingest, /recall  │ │
           │  └────────────┬───────────────────┘ │
           │               │                      │
           │  ┌────────────▼───────────────────┐ │
           │  │    Core Services Layer         │ │
           │  │  ┌──────────────────────────┐  │ │
           │  │  │ BookmarkManager          │  │ │
-          │  │  │ SearchEngine             │  │ │
+          │  │  │ RecallService            │  │ │
           │  │  │ StorageManager           │  │ │
           │  │  │ ContentAnalyzer          │  │ │
-          │  │  │ ScreenshotCapture        │  │ │
+          │  │  │ IngestionService         │  │ │
           │  │  └──────────────────────────┘  │ │
           │  └────────────┬───────────────────┘ │
           └───────────────┼─────────────────────┘
@@ -76,9 +76,9 @@
 - Last accessed timestamp tracking
 - Duplicate detection
 
-**SearchEngine**
-- Keyword/text search
-- Semantic search with OpenAI embeddings
+**RecallService**
+- Hybrid keyword + semantic recall
+- OpenAI embeddings integration
 - Embedding cache management
 - Result ranking and filtering
 
@@ -96,11 +96,11 @@
 - Favicon downloading
 - Metadata extraction
 
-**ScreenshotCapture**
-- Playwright browser management
-- Screenshot capture with retries
-- Image optimization and storage
-- Error handling for dynamic pages
+**IngestionService**
+- Browser extension capture handling
+- Preview generation and commit workflow
+- Provider chain management
+- Quick-save direct capture
 
 ## 2. Technology Stack Details
 
@@ -292,25 +292,24 @@ yoshibookmark/
 ├── src/
 │   └── yoshibookmark/
 │       ├── __init__.py
-│       ├── __main__.py              # Entry point: python -m yoshibookmark
 │       ├── cli.py                   # CLI commands
 │       ├── config.py                # Configuration management
 │       │
 │       ├── api/                     # FastAPI routes
 │       │   ├── __init__.py
 │       │   ├── bookmarks.py         # Bookmark CRUD endpoints
-│       │   ├── search.py            # Search endpoints
-│       │   ├── views.py             # View-related endpoints
-│       │   ├── storage.py           # Storage management endpoints
+│       │   ├── ingest.py            # Browser extension ingestion endpoints
+│       │   ├── recall.py            # Natural-language recall endpoints
 │       │   └── health.py            # Health check endpoints
 │       │
 │       ├── core/                    # Core business logic
 │       │   ├── __init__.py
 │       │   ├── bookmark_manager.py  # Bookmark operations
-│       │   ├── search_engine.py     # Search logic
+│       │   ├── ai_inference.py      # AI/LLM inference logic
+│       │   ├── ingestion_service.py # Browser extension ingestion logic
+│       │   ├── recall_service.py    # Recall/search logic
 │       │   ├── storage_manager.py   # File I/O and indexing
-│       │   ├── content_analyzer.py  # Web content analysis
-│       │   └── screenshot.py        # Screenshot capture
+│       │   └── content_analyzer.py  # Web content analysis
 │       │
 │       ├── models/                  # Pydantic models
 │       │   ├── __init__.py
@@ -339,13 +338,14 @@ yoshibookmark/
 ├── tests/
 │   ├── __init__.py
 │   ├── test_bookmark_manager.py
-│   ├── test_search_engine.py
 │   ├── test_storage_manager.py
-│   └── fixtures/
-│
-├── docs/
-│   ├── API.md
-│   └── USER_GUIDE.md
+│   ├── test_ai_inference.py
+│   ├── test_api_bookmarks.py
+│   ├── test_api_ingest.py
+│   ├── test_api_recall.py
+│   ├── test_cli.py
+│   ├── test_config.py
+│   └── test_content_analyzer.py
 │
 ├── pyproject.toml               # Project metadata and dependencies
 ├── requirements.txt             # Pinned dependencies
