@@ -41,7 +41,7 @@ yoshibookmark init --storage-mode onedrive-only --onedrive-path "C:\Users\YourNa
 yoshibookmark serve
 ```
 
-The server will automatically select an available port and display the URL.
+The server binds to port 8000 by default. Use `--port` to select a different port. The URL is displayed on startup.
 
 ## Configuration
 
@@ -277,14 +277,17 @@ REST API available at `http://localhost:{port}/api/v1`:
 - `GET /bookmarks` - List bookmarks
 - `GET /bookmarks/{id}` - Get bookmark
 - `PUT /bookmarks/{id}` - Update bookmark
-- `DELETE /bookmarks/{id}` - Delete bookmark
+- `DELETE /bookmarks/{id}` - Delete bookmark (soft or hard)
+- `POST /bookmarks/{id}/restore` - Restore a soft-deleted bookmark
+- `POST /bookmarks/{id}/access` - Update last-accessed timestamp
 - `POST /ingest/preview` - Generate capture suggestions for browser extension
 - `POST /ingest/commit` - Commit a preview into bookmark storage
 - `POST /ingest/quick-save` - Save directly from capture context
 - `GET /ingest/providers/status` - Provider chain diagnostics for ingestion
+- `GET /ingest/preview/{preview_id}/diagnostics` - Per-preview provider diagnostics
 - `POST /recall/query` - Natural-language recall (hybrid keyword + semantic with fallback)
 
-See `docs/API.md` for complete API documentation.
+See the interactive API documentation at `http://localhost:{port}/docs`.
 
 ## Development
 
@@ -375,7 +378,7 @@ The YAML file format is human-readable and git/diff-friendly, making it perfect 
 
 - [x] Phase 1: Basic bookmark management
 - [x] Phase 2: OpenAI integration for smart features
-- [ ] Phase 3: Semantic search and duplicate detection
+- [x] Phase 3: Semantic search (hybrid keyword + embedding recall)
 - [ ] Phase 4: Screenshots and visual features
 - [ ] Phase 5: Import/export and graph visualization
 - [ ] Phase 6: Modern React/Vue frontend
