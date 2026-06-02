@@ -19,17 +19,17 @@
           │      FastAPI Application            │
           │  ┌────────────────────────────────┐ │
           │  │      API Routes Layer          │ │
-          │  │  /bookmarks, /search, /views   │ │
+          │  │  /bookmarks, /ingest, /recall  │ │
           │  └────────────┬───────────────────┘ │
           │               │                      │
           │  ┌────────────▼───────────────────┐ │
           │  │    Core Services Layer         │ │
           │  │  ┌──────────────────────────┐  │ │
           │  │  │ BookmarkManager          │  │ │
-          │  │  │ SearchEngine             │  │ │
+          │  │  │ IngestionService         │  │ │
+          │  │  │ RecallService            │  │ │
           │  │  │ StorageManager           │  │ │
           │  │  │ ContentAnalyzer          │  │ │
-          │  │  │ ScreenshotCapture        │  │ │
           │  │  └──────────────────────────┘  │ │
           │  └────────────┬───────────────────┘ │
           └───────────────┼─────────────────────┘
@@ -299,18 +299,18 @@ yoshibookmark/
 │       ├── api/                     # FastAPI routes
 │       │   ├── __init__.py
 │       │   ├── bookmarks.py         # Bookmark CRUD endpoints
-│       │   ├── search.py            # Search endpoints
-│       │   ├── views.py             # View-related endpoints
-│       │   ├── storage.py           # Storage management endpoints
+│       │   ├── ingest.py            # Browser extension ingestion endpoints
+│       │   ├── recall.py            # Natural-language recall endpoints
 │       │   └── health.py            # Health check endpoints
 │       │
 │       ├── core/                    # Core business logic
 │       │   ├── __init__.py
 │       │   ├── bookmark_manager.py  # Bookmark operations
-│       │   ├── search_engine.py     # Search logic
+│       │   ├── ai_inference.py      # AI/LLM inference helpers
+│       │   ├── ingestion_service.py # Browser extension ingestion logic
+│       │   ├── recall_service.py    # Natural-language recall logic
 │       │   ├── storage_manager.py   # File I/O and indexing
-│       │   ├── content_analyzer.py  # Web content analysis
-│       │   └── screenshot.py        # Screenshot capture
+│       │   └── content_analyzer.py  # Web content analysis
 │       │
 │       ├── models/                  # Pydantic models
 │       │   ├── __init__.py
@@ -325,15 +325,11 @@ yoshibookmark/
 │       │   └── url_utils.py         # URL validation/parsing
 │       │
 │       └── web/                     # Frontend assets
-│           ├── static/
-│           │   ├── css/
-│           │   │   └── style.css
-│           │   ├── js/
-│           │   │   ├── app.js
-│           │   │   ├── search.js
-│           │   │   └── views.js
-│           │   └── icons/
-│           └── templates/
+│           └── static/
+│               ├── css/
+│               │   └── styles.css
+│               ├── js/
+│               │   └── app.js
 │               └── index.html
 │
 ├── tests/
@@ -477,7 +473,12 @@ Response 200:
 ```http
 DELETE /api/v1/bookmarks/{id}?hard=true
 
-Response 204 No Content
+Response 200:
+{
+  "id": "...",
+  "url": "...",
+  ...
+}
 ```
 
 **Restore Bookmark**
@@ -503,189 +504,107 @@ Response 200:
 }
 ```
 
-#### Search
+#### Ingestion (Browser Extension)
 
-**Keyword Search**
+**Create Preview**
 ```http
-GET /api/v1/search?q={query}&storage={storage_name}&type=keyword
-
-Response 200:
-{
-  "query": "python",
-  "results": [
-    {
-      "id": "...",
-      "url": "...",
-      "title": "...",
-      "relevance_score": 0.95,
-      "matched_fields": ["keywords", "title"]
-    }
-  ],
-  "total": 15,
-  "search_type": "keyword"
-}
-```
-
-**Semantic Search**
-```http
-GET /api/v1/search?q={query}&storage={storage_name}&type=semantic
-
-Response 200:
-{
-  "query": "how to write good Python code",
-  "results": [
-    {
-      "id": "...",
-      "url": "...",
-      "title": "Python Best Practices Guide",
-      "relevance_score": 0.87,
-      "similarity": 0.87
-    }
-  ],
-  "total": 8,
-  "search_type": "semantic"
-}
-```
-
-#### Views
-
-**Global View**
-```http
-GET /api/v1/views/global?sort_by={field}&order={asc|desc}
-
-Response 200:
-{
-  "bookmarks": [
-    {
-      "id": "...",
-      "storage_location": "work",
-      "title": "...",
-      ...
-    }
-  ],
-  "storage_locations": ["work", "personal"],
-  "total": 250
-}
-```
-
-**Top Keyword View**
-```http
-GET /api/v1/views/top-keyword?storage={storage_name}&global={bool}
-
-Response 200:
-{
-  "keyword_groups": [
-    {
-      "keyword": "python",
-      "count": 25,
-      "bookmarks": [...]
-    },
-    {
-      "keyword": "javascript",
-      "count": 18,
-      "bookmarks": [...]
-    }
-  ],
-  "storage": "work"
-}
-```
-
-**Filtered View**
-```http
-GET /api/v1/views/filtered?query={query}&storage={storage_name}&global={bool}
-
-Response 200:
-{
-  "query": "...",
-  "filtered_bookmarks": [...],
-  "total": 42
-}
-```
-
-**Duplicate Detection View**
-```http
-GET /api/v1/views/duplicates?storage={storage_name}
-
-Response 200:
-{
-  "duplicate_groups": [
-    {
-      "url": "https://github.com/python/cpython",
-      "count": 3,
-      "bookmarks": [
-        {
-          "id": "...",
-          "keywords": ["python", "source"],
-          "last_accessed": "..."
-        },
-        {
-          "id": "...",
-          "keywords": ["cpython", "reference"],
-          "last_accessed": "..."
-        }
-      ]
-    }
-  ],
-  "total_duplicates": 15
-}
-```
-
-#### Storage Management
-
-**List Storage Locations**
-```http
-GET /api/v1/storage
-
-Response 200:
-{
-  "storage_locations": [
-    {
-      "name": "work",
-      "path": "/path/to/work",
-      "is_current": true,
-      "is_default": true,
-      "bookmark_count": 150
-    },
-    {
-      "name": "personal",
-      "path": "/path/to/personal",
-      "is_current": false,
-      "is_default": false,
-      "bookmark_count": 95
-    }
-  ]
-}
-```
-
-**Add Storage Location**
-```http
-POST /api/v1/storage
+POST /api/v1/ingest/preview
+Authorization: Bearer {token}
 Content-Type: application/json
 
 {
-  "name": "research",
-  "path": "/path/to/research"
+  "url": "https://example.com",
+  "page_title": "Example Site",
+  "page_excerpt": "...",
+  "selected_text": "...",
+  "storage_location": "work"
 }
-
-Response 201:
-{
-  "name": "research",
-  "path": "/path/to/research",
-  "is_current": false,
-  "is_default": false
-}
-```
-
-**Set Current Storage**
-```http
-POST /api/v1/storage/{name}/set-current
 
 Response 200:
 {
-  "name": "research",
-  "is_current": true
+  "preview_id": "...",
+  "title": "...",
+  "keywords": [...],
+  "description": "..."
 }
 ```
+
+**Commit Preview**
+```http
+POST /api/v1/ingest/commit
+Authorization: Bearer {token}
+Content-Type: application/json
+
+{
+  "preview_id": "...",
+  "title": "Final Title",
+  "keywords": ["kw1", "kw2"]
+}
+
+Response 200:
+{
+  "bookmark": {...},
+  "status": "committed"
+}
+```
+
+**Quick Save**
+```http
+POST /api/v1/ingest/quick-save
+Authorization: Bearer {token}
+Content-Type: application/json
+
+{
+  "url": "https://example.com",
+  "page_title": "Example Site",
+  "storage_location": "work"
+}
+
+Response 200:
+{
+  "bookmark": {...},
+  "status": "saved"
+}
+```
+
+**Provider Status**
+```http
+GET /api/v1/ingest/providers/status
+
+Response 200:
+{
+  "providers": [...]
+}
+```
+
+#### Recall
+
+**Natural-Language Recall**
+```http
+POST /api/v1/recall/query
+Content-Type: application/json
+
+{
+  "query": "python style guide I saved last week",
+  "limit": 10,
+  "scope": "all"
+}
+
+Response 200:
+{
+  "query": "python style guide I saved last week",
+  "results": [
+    {
+      "id": "...",
+      "url": "...",
+      "title": "...",
+      "relevance_score": 0.95
+    }
+  ],
+  "total": 5
+}
+```
+
 
 #### Health & Info
 
@@ -698,7 +617,13 @@ Response 200:
   "status": "healthy",
   "version": "0.1.0",
   "storage_accessible": true,
-  "openai_configured": true
+  "storage_count": 1,
+  "current_storage": "onedrive",
+  "storage_mode": "onedrive_only",
+  "primary_storage_provider": "onedrive_local",
+  "primary_storage_path": "/path/to/storage",
+  "conflict_count": 0,
+  "recent_conflicts": []
 }
 ```
 
@@ -1373,153 +1298,52 @@ yoshibookmark = ["web/**/*"]
 ```python
 import click
 import uvicorn
-import asyncio
 from pathlib import Path
 
 @click.group()
-def main():
-    """YoshiBookmark - URL and Bookmark Management System"""
+def cli():
+    """YoshiBookmark - URL and bookmark management system."""
     pass
 
-@main.command()
-@click.option('--host', default='127.0.0.1', help='Host to bind to')
-@click.option('--port', default=None, type=int, help='Port to bind to (auto-select if not specified)')
-@click.option('--config', default=None, help='Path to config file')
-def serve(host, port, config):
-    """Start the bookmark server."""
+@cli.command()
+@click.option('--host', default='127.0.0.1', help='Host to bind (default: 127.0.0.1)')
+@click.option('--port', default=8000, type=int, help='Port to bind (default: 8000)')
+@click.option('--reload', is_flag=True, default=False, help='Enable auto-reload for development')
+@click.option('--config-dir', type=click.Path(path_type=Path), default=None,
+              help='Configuration directory (default: ~/.yoshibookmark)')
+def serve(host, port, reload, config_dir):
+    """Start the YoshiBookmark API server."""
+    # Validates config and .env exist, then starts server
+    uvicorn.run("yoshibookmark.api:app", host=host, port=port, reload=reload)
 
-    # Load or create config
-    if config:
-        config_path = Path(config)
-    else:
-        config_path = Path.home() / '.yoshibookmark' / 'config.yaml'
+@cli.command()
+@click.option('--storage-mode', type=click.Choice(['multi', 'onedrive-only']),
+              default='onedrive-only')
+@click.option('--onedrive-path', type=click.Path(path_type=Path, file_okay=False))
+@click.option('--config-dir', type=click.Path(path_type=Path), default=None)
+def init(storage_mode, onedrive_path, config_dir):
+    """Initialize YoshiBookmark configuration."""
+    pass  # Creates config.yaml and .env in config_dir (~/.yoshibookmark by default)
 
-    if not config_path.exists():
-        click.echo(f"No config found at {config_path}")
-        click.echo("Run 'yoshibookmark init' first to create configuration")
-        return
+@cli.command(name='migrate-to-onedrive')
+@click.option('--source-path', type=click.Path(path_type=Path, exists=True), required=True)
+@click.option('--onedrive-path', type=click.Path(path_type=Path))
+@click.option('--config-dir', type=click.Path(path_type=Path), default=None)
+@click.option('--force', is_flag=True, default=False)
+def migrate_to_onedrive(source_path, onedrive_path, config_dir, force):
+    """Migrate existing bookmark storage to OneDrive local sync folder."""
+    pass
 
-    # Auto-select port if not specified
-    if port is None:
-        import socket
-        sock = socket.socket()
-        sock.bind(('', 0))
-        port = sock.getsockname()[1]
-        sock.close()
+@cli.command()
+@click.option('--config-dir', type=click.Path(path_type=Path), default=None)
+@click.option('--api-url', type=str, default=None,
+              help='Optional running API URL to verify (e.g. http://127.0.0.1:8000)')
+def doctor(config_dir, api_url):
+    """Validate local setup and report actionable fixes."""
+    pass
 
-    click.echo(f"Starting YoshiBookmark server at http://{host}:{port}")
-
-    uvicorn.run(
-        "yoshibookmark.api:app",
-        host=host,
-        port=port,
-        reload=False
-    )
-
-@main.command()
-@click.option('--azure', is_flag=True, help='Configure for Azure OpenAI')
-def init(azure):
-    """Initialize configuration."""
-    config_dir = Path.home() / '.yoshibookmark'
-    config_dir.mkdir(exist_ok=True)
-
-    config_file = config_dir / 'config.yaml'
-    env_file = config_dir / '.env'
-
-    if config_file.exists() and env_file.exists():
-        click.echo(f"Config already exists at {config_dir}")
-        if not click.confirm("Overwrite existing configuration?"):
-            return
-
-    # Interactive setup
-    click.echo("Welcome to YoshiBookmark!")
-    click.echo("\nLet's set up your configuration.\n")
-
-    # API Configuration
-    if azure:
-        click.echo("Configuring for Azure OpenAI...")
-        api_key = click.prompt("Azure OpenAI API Key", hide_input=True)
-        endpoint = click.prompt("Azure OpenAI Endpoint (e.g., https://your-resource.openai.azure.com)")
-        deployment = click.prompt("Deployment Name")
-        api_version = click.prompt("API Version", default="2024-02-15-preview")
-
-        env_content = f"""# Azure OpenAI Configuration
-OPENAI_API_KEY={api_key}
-OPENAI_API_TYPE=azure
-AZURE_OPENAI_ENDPOINT={endpoint}
-AZURE_OPENAI_DEPLOYMENT_NAME={deployment}
-OPENAI_API_VERSION={api_version}
-"""
-    else:
-        click.echo("Configuring for OpenAI...")
-        api_key = click.prompt("OpenAI API Key", hide_input=True)
-
-        if click.confirm("Use custom endpoint?", default=False):
-            custom_endpoint = click.prompt("Custom API Base URL")
-            env_content = f"""# OpenAI Configuration (Custom Endpoint)
-OPENAI_API_KEY={api_key}
-OPENAI_API_BASE={custom_endpoint}
-"""
-        else:
-            env_content = f"""# OpenAI Configuration
-OPENAI_API_KEY={api_key}
-"""
-
-    # Storage Configuration
-    default_storage_path = click.prompt(
-        "Default storage path",
-        default=str(config_dir / 'storage' / 'default')
-    )
-
-    # Create .env file
-    with open(env_file, 'w') as f:
-        f.write(env_content)
-
-    # Secure .env file permissions (Unix-like systems)
-    if os.name != 'nt':  # Not Windows
-        os.chmod(env_file, 0o600)
-
-    # Create config.yaml
-    config = {
-        'storage_locations': [
-            {
-                'name': 'default',
-                'path': default_storage_path,
-                'is_current': True,
-                'is_default': True
-            }
-        ],
-        'enable_semantic_search': True,
-        'enable_screenshots': True,
-        'embedding_model': 'text-embedding-3-small',
-        'content_analysis_model': 'gpt-4o-mini'
-    }
-
-    import yaml
-    with open(config_file, 'w') as f:
-        yaml.safe_dump(config, f, default_flow_style=False)
-
-    # Create storage directories
-    storage_path = Path(default_storage_path)
-    storage_path.mkdir(parents=True, exist_ok=True)
-    (storage_path / 'bookmarks').mkdir(exist_ok=True)
-    (storage_path / 'favicons').mkdir(exist_ok=True)
-    (storage_path / 'screenshots').mkdir(exist_ok=True)
-
-    click.echo(f"\n✓ Credentials saved to {env_file}")
-    click.echo(f"✓ Configuration saved to {config_file}")
-    click.echo(f"✓ Storage created at {storage_path}")
-    click.echo("\n⚠️  IMPORTANT: Never commit .env file to version control!")
-    click.echo("\nRun 'yoshibookmark serve' to start the server!")
-
-@main.command()
-@click.argument('url')
-@click.option('--title', help='Bookmark title')
-@click.option('--keywords', help='Comma-separated keywords')
-def add(url, title, keywords):
-    """Add a bookmark from command line."""
-    # Implementation here
-    click.echo(f"Adding bookmark: {url}")
+def main():
+    cli()
 
 if __name__ == '__main__':
     main()

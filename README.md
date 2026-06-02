@@ -41,7 +41,7 @@ yoshibookmark init --storage-mode onedrive-only --onedrive-path "C:\Users\YourNa
 yoshibookmark serve
 ```
 
-The server will automatically select an available port and display the URL.
+The server will start on port 8000 by default (configurable via `--port`). Open the web app at `http://127.0.0.1:8000/app`.
 
 ## Configuration
 
