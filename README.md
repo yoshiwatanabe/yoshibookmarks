@@ -18,7 +18,7 @@ A URL and bookmark management system with intelligent search, semantic discovery
 ### Requirements
 
 - Python 3.10 or higher
-- OpenAI API key (or Azure OpenAI)
+- At least one AI provider API key: OpenAI, Azure OpenAI, Anthropic, or Google Gemini
 
 ### Quick Start
 
@@ -116,6 +116,12 @@ OPENAI_API_VERSION=2024-02-15-preview
 # OR: Custom OpenAI-Compatible Endpoint
 OPENAI_API_BASE=https://api.your-service.com/v1
 OPENAI_API_KEY=your-key
+
+# OR: Anthropic
+ANTHROPIC_API_KEY=your-anthropic-key
+
+# OR: Google Gemini
+GOOGLE_API_KEY=your-google-api-key
 
 # Extension capture auth (local shared secret, not OAuth; same value used in extension settings)
 EXTENSION_API_TOKEN=your-random-local-token
@@ -278,13 +284,16 @@ REST API available at `http://localhost:{port}/api/v1`:
 - `GET /bookmarks/{id}` - Get bookmark
 - `PUT /bookmarks/{id}` - Update bookmark
 - `DELETE /bookmarks/{id}` - Delete bookmark
+- `POST /bookmarks/{id}/restore` - Restore a soft-deleted bookmark
+- `POST /bookmarks/{id}/access` - Track bookmark access (updates last_accessed timestamp)
 - `POST /ingest/preview` - Generate capture suggestions for browser extension
 - `POST /ingest/commit` - Commit a preview into bookmark storage
 - `POST /ingest/quick-save` - Save directly from capture context
 - `GET /ingest/providers/status` - Provider chain diagnostics for ingestion
+- `GET /ingest/preview/{id}/diagnostics` - Get provider trace for a preview
 - `POST /recall/query` - Natural-language recall (hybrid keyword + semantic with fallback)
 
-See `docs/API.md` for complete API documentation.
+See the interactive API docs at `http://127.0.0.1:<port>/docs` for complete API documentation.
 
 ## Development
 
@@ -393,7 +402,7 @@ MIT License - See LICENSE file for details
 ## Support
 
 - **Issues**: https://github.com/yourusername/yoshibookmark/issues
-- **Documentation**: See `docs/` directory
+- **Documentation**: See `DESIGN.md` and `spec.md` for technical and feature details
 - **Design**: See `DESIGN.md` for technical details
 
 ## Acknowledgments
