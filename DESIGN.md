@@ -299,18 +299,18 @@ yoshibookmark/
 │       ├── api/                     # FastAPI routes
 │       │   ├── __init__.py
 │       │   ├── bookmarks.py         # Bookmark CRUD endpoints
-│       │   ├── search.py            # Search endpoints
-│       │   ├── views.py             # View-related endpoints
-│       │   ├── storage.py           # Storage management endpoints
+│       │   ├── ingest.py            # Extension ingestion endpoints
+│       │   ├── recall.py            # Natural-language recall endpoints
 │       │   └── health.py            # Health check endpoints
 │       │
 │       ├── core/                    # Core business logic
 │       │   ├── __init__.py
 │       │   ├── bookmark_manager.py  # Bookmark operations
-│       │   ├── search_engine.py     # Search logic
+│       │   ├── ai_inference.py      # AI/LLM inference helpers
+│       │   ├── ingestion_service.py # Extension capture workflow
+│       │   ├── recall_service.py    # Natural-language recall logic
 │       │   ├── storage_manager.py   # File I/O and indexing
-│       │   ├── content_analyzer.py  # Web content analysis
-│       │   └── screenshot.py        # Screenshot capture
+│       │   └── content_analyzer.py  # Web content analysis
 │       │
 │       ├── models/                  # Pydantic models
 │       │   ├── __init__.py
@@ -325,27 +325,25 @@ yoshibookmark/
 │       │   └── url_utils.py         # URL validation/parsing
 │       │
 │       └── web/                     # Frontend assets
-│           ├── static/
-│           │   ├── css/
-│           │   │   └── style.css
-│           │   ├── js/
-│           │   │   ├── app.js
-│           │   │   ├── search.js
-│           │   │   └── views.js
-│           │   └── icons/
-│           └── templates/
+│           └── static/
+│               ├── css/
+│               │   └── styles.css
+│               ├── js/
+│               │   └── app.js
 │               └── index.html
 │
 ├── tests/
 │   ├── __init__.py
 │   ├── test_bookmark_manager.py
-│   ├── test_search_engine.py
+│   ├── test_bookmark_model.py
+│   ├── test_api_bookmarks.py
+│   ├── test_api_ingest.py
+│   ├── test_api_recall.py
 │   ├── test_storage_manager.py
-│   └── fixtures/
-│
-├── docs/
-│   ├── API.md
-│   └── USER_GUIDE.md
+│   ├── test_content_analyzer.py
+│   ├── test_ai_inference.py
+│   ├── test_config.py
+│   └── test_cli.py
 │
 ├── pyproject.toml               # Project metadata and dependencies
 ├── requirements.txt             # Pinned dependencies
@@ -503,130 +501,100 @@ Response 200:
 }
 ```
 
-#### Search
+#### Ingest (Browser Extension)
 
-**Keyword Search**
+**Create Preview** (generate suggestions before committing)
 ```http
-GET /api/v1/search?q={query}&storage={storage_name}&type=keyword
+POST /api/v1/ingest/preview
+Authorization: Bearer {extension_api_token}
+Content-Type: application/json
+
+{
+  "url": "https://example.com",
+  "page_title": "Example Site",
+  "page_excerpt": "...",
+  "selected_text": "...",
+  "user_note": "context note",
+  "storage_location": "onedrive"
+}
 
 Response 200:
 {
-  "query": "python",
-  "results": [
-    {
-      "id": "...",
-      "url": "...",
-      "title": "...",
-      "relevance_score": 0.95,
-      "matched_fields": ["keywords", "title"]
-    }
-  ],
-  "total": 15,
-  "search_type": "keyword"
+  "preview_id": "...",
+  "suggested_title": "...",
+  "suggested_keywords": ["example", "test"],
+  "suggested_description": "..."
 }
 ```
 
-**Semantic Search**
+**Commit Preview** (persist a previously generated preview)
 ```http
-GET /api/v1/search?q={query}&storage={storage_name}&type=semantic
+POST /api/v1/ingest/commit
+Authorization: Bearer {extension_api_token}
+Content-Type: application/json
+
+{
+  "preview_id": "...",
+  "title": "Example Site",
+  "keywords": ["example", "test"],
+  "description": "my notes"
+}
 
 Response 200:
 {
-  "query": "how to write good Python code",
-  "results": [
-    {
-      "id": "...",
-      "url": "...",
-      "title": "Python Best Practices Guide",
-      "relevance_score": 0.87,
-      "similarity": 0.87
-    }
-  ],
-  "total": 8,
-  "search_type": "semantic"
+  "bookmark": {...},
+  "status": "committed"
 }
 ```
 
-#### Views
-
-**Global View**
+**Quick Save** (save immediately from capture context)
 ```http
-GET /api/v1/views/global?sort_by={field}&order={asc|desc}
+POST /api/v1/ingest/quick-save
+Authorization: Bearer {extension_api_token}
+Content-Type: application/json
+
+{
+  "url": "https://example.com",
+  "page_title": "Example Site",
+  "storage_location": "onedrive"
+}
 
 Response 200:
 {
-  "bookmarks": [
-    {
-      "id": "...",
-      "storage_location": "work",
-      "title": "...",
-      ...
-    }
-  ],
-  "storage_locations": ["work", "personal"],
-  "total": 250
+  "bookmark": {...},
+  "status": "saved"
 }
 ```
 
-**Top Keyword View**
+**Provider Status**
 ```http
-GET /api/v1/views/top-keyword?storage={storage_name}&global={bool}
+GET /api/v1/ingest/providers/status
 
 Response 200:
 {
-  "keyword_groups": [
-    {
-      "keyword": "python",
-      "count": 25,
-      "bookmarks": [...]
-    },
-    {
-      "keyword": "javascript",
-      "count": 18,
-      "bookmarks": [...]
-    }
-  ],
-  "storage": "work"
+  "providers": [...]
 }
 ```
 
-**Filtered View**
+#### Recall
+
+**Natural-Language Query** (hybrid keyword + semantic with fallback)
 ```http
-GET /api/v1/views/filtered?query={query}&storage={storage_name}&global={bool}
+POST /api/v1/recall/query
+Content-Type: application/json
+
+{
+  "query": "the python style guide I was reading",
+  "limit": 10,
+  "scope": "all"
+}
 
 Response 200:
 {
   "query": "...",
-  "filtered_bookmarks": [...],
-  "total": 42
-}
-```
-
-**Duplicate Detection View**
-```http
-GET /api/v1/views/duplicates?storage={storage_name}
-
-Response 200:
-{
-  "duplicate_groups": [
-    {
-      "url": "https://github.com/python/cpython",
-      "count": 3,
-      "bookmarks": [
-        {
-          "id": "...",
-          "keywords": ["python", "source"],
-          "last_accessed": "..."
-        },
-        {
-          "id": "...",
-          "keywords": ["cpython", "reference"],
-          "last_accessed": "..."
-        }
-      ]
-    }
-  ],
-  "total_duplicates": 15
+  "results": [...],
+  "mode": "hybrid",
+  "total": 5
 }
 ```
 
@@ -1675,15 +1643,18 @@ yoshibookmark serve
 
 ### Unit Tests
 - `test_bookmark_manager.py`: CRUD operations, validation
-- `test_search_engine.py`: Keyword and semantic search
+- `test_bookmark_model.py`: Bookmark model validation
 - `test_storage_manager.py`: File I/O, locking, indexing
 - `test_content_analyzer.py`: URL fetching, GPT analysis
-- `test_screenshot.py`: Screenshot capture
+- `test_ai_inference.py`: AI inference helpers
+- `test_config.py`: Configuration loading and validation
+- `test_cli.py`: CLI command tests
 
 ### Integration Tests
-- API endpoint tests
+- `test_api_bookmarks.py`: Bookmark CRUD endpoint tests
+- `test_api_ingest.py`: Extension ingestion endpoint tests
+- `test_api_recall.py`: Recall query endpoint tests
 - End-to-end bookmark creation flow
-- Search flows
 - Multi-storage operations
 
 ### Manual Testing Checklist
