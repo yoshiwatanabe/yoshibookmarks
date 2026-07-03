@@ -282,9 +282,10 @@ REST API available at `http://localhost:{port}/api/v1`:
 - `POST /ingest/commit` - Commit a preview into bookmark storage
 - `POST /ingest/quick-save` - Save directly from capture context
 - `GET /ingest/providers/status` - Provider chain diagnostics for ingestion
+- `GET /ingest/preview/{id}/diagnostics` - Diagnostics for a specific preview
+- `POST /bookmarks/{id}/restore` - Restore a soft-deleted bookmark
+- `POST /bookmarks/{id}/access` - Update last-accessed timestamp
 - `POST /recall/query` - Natural-language recall (hybrid keyword + semantic with fallback)
-
-See `docs/API.md` for complete API documentation.
 
 ## Development
 
